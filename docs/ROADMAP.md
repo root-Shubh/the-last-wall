@@ -1,27 +1,41 @@
 # Roadmap
 
-Milestones are tracked in Jira project SVTLW. Issue keys are listed below for each milestone. Epics are SVTLW-1 to SVTLW-19.
+Milestones are tracked in Jira project SVTLW. Epics are SVTLW-1 to SVTLW-19.
 
 ## Status
 
 | Milestone | Scope | Status |
 |---|---|---|
-| M1 | Vertical slice | In progress (SVTLW-20 done, SVTLW-21 in review, SVTLW-22 in progress) |
+| M1 | Vertical slice | Done in code and headless tests. Not yet playtested by eye (see report below). |
 | M2 | Core game | Not started |
 | M3 | Progression | Not started |
 | M4 | Narrative | Not started |
 | M5 | Long-term progression | Not started |
 | M6 | Endgame | Not started |
-| M7 | Production quality | Not started |
+| M7 | Production quality | Not started. Includes final art and audio (SVTLW-86 to SVTLW-88). |
 | M8 | Release candidate | Not started |
 
-## M1: Vertical slice (SVTLW-20 to SVTLW-50)
+## M1 report (SVTLW-48)
 
-Done when a player can start, play several waves, upgrade, save, quit, reload and continue, with no errors and passing tests.
+**What M1 contains.** A player can press Play, pick a character and name, watch the opening intro, recruit archers, start waves, see wall damage and resources on the top bar, buy upgrades through the battlefield systems, save and reload, and quit. Waves 1 to 10 come from data.
 
-- Repository and project structure: SVTLW-20 (done), SVTLW-21 (in review), SVTLW-22 (design docs, in progress).
-- Core systems, UI, units, enemies, combat, economy, narrative, save and tests: SVTLW-23 to SVTLW-50.
-- Milestone report and playtest: SVTLW-48.
+**Tests run.** 20 headless suites, 265 checks, all passing on Godot 4.7.2. The suites run in CI on every pull request (`.github/workflows/tests.yml`), and the workflow passed on the M1 pull requests.
+
+**Not verified.** No human has played the game by eye. The checks confirm logic, layout values and signal behaviour, not how the game looks or feels. The first real playtest is the next step, before M2 begins.
+
+**Known gaps for M1 (not blockers for the logic, but visible to a player).**
+- All art is coloured blocks (placeholder, per `docs/ART_STANDARDS.md`).
+- Audio is recorded as events only. No sound plays yet (SVTLW-88).
+- Menus, picker and dialogue box are unstyled.
+- Settings and Credits menu entries emit signals with no screens behind them.
+- Balance numbers (gold, costs, enemy stats) are first-pass values.
+
+**Milestone verdict.** M1 is complete as a code deliverable. It is not complete as a playable, polished slice until the playtest above has been done and its findings have been logged.
+
+## M1 tickets
+
+- SVTLW-20 to SVTLW-50 are Done, except SVTLW-48, which is this report.
+- SVTLW-98 (save overwrite bug) and SVTLW-99 (launchable game) are Done.
 
 ## M2 to M8
 
@@ -42,4 +56,4 @@ Each later milestone gets its tasks broken down when it starts, not before. Stor
 1. Branch `feature-SVTLW-<n>` from `develop`.
 2. Commit as `SVTLW-<n> #comment <summary>`, and post the same summary to Jira.
 3. Open a pull request into `develop` that lists testing and known issues.
-4. Merge after review. Release promotion follows develop → qa → staging → release → master.
+4. Merge after CI passes. Release promotion follows develop → qa → staging → release → master.
