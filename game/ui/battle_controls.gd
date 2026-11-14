@@ -54,6 +54,7 @@ func bind(battlefield: Battlefield) -> void:
 	field.overseer_message.connect(show_message)
 	field.death_line.connect(show_message)
 	field.region_entered.connect(func(region_name: String) -> void: show_message("Region: " + region_name))
+	field.notice.connect(show_message)
 	field.achievement_unlocked.connect(func(achievement_id: String) -> void: show_message("Achievement: " + achievement_id))
 	show_region_and_challenge()
 
@@ -88,6 +89,7 @@ func build() -> void:
 	add_child(row_b)
 	for id: String in Abilities.DEFINITIONS:
 		_button(row_b, ABILITY_LABELS[id], func() -> void: use_ability(id))
+	_button(row_b, "Wall Up", func() -> void: upgrade_wall())
 	_button(row_b, "Research", func() -> void: toggle_research())
 	_button(row_b, "Prestige Menu", func() -> void: toggle_prestige_panel())
 	_button(row_b, "Challenge", func() -> void: toggle_challenge())
@@ -112,6 +114,10 @@ func _build_prestige_panel() -> void:
 func toggle_prestige_panel() -> void:
 	if _prestige_panel != null:
 		_prestige_panel.visible = not _prestige_panel.visible
+
+
+func upgrade_wall() -> bool:
+	return field != null and field.upgrade_wall()
 
 
 func toggle_research() -> void:

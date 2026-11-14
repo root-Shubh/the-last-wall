@@ -89,6 +89,7 @@ func ensure_ready() -> void:
 	_build_meta()
 	_build_research()
 	_connect_systems()
+	_build_view()
 	hud = TopBar.new()
 	add_child(hud)
 	hud.bind(game_state, clock, waves, wall)
@@ -121,8 +122,69 @@ func _update_shake() -> void:
 func build(building_id: String, slot: int) -> bool:
 	ensure_ready()
 	if slot < 0 or slot >= SLOT_POSITIONS.size():
+		notice.emit("No free slot on the fortress")
 		return false
-	return constructions.start_construction(building_id, slot)
+	var reason: String = constructions.start_block_reason(building_id, slot)
+	if reason != "":
+		notice.emit(reason)
+		return false
+	var cost: int = constructions.definition(building_id).build_cost
+	constructions.start_construction(building_id, slot)
+	float_text(SLOT_POSITIONS[slot], "-%d gold" % cost, Color(1.0, 0.8, 0.3))
+	return true
+
+
+## A short message for refused actions and results (SVTLW-105 feedback).
+signal notice(text: String)
+
+
+## Floating text that rises and fades, for gold gained or spent and for damage (feedback).
+func float_text(at: Vector2, text: String, colour: Color) -> void:
+	var label: Label = Label.new()
+	label.text = text
+	label.position = at + Vector2(-20.0, -40.0)
+	label.add_theme_color_override("font_color", colour)
+	label.add_theme_font_size_override("font_size", 16)
+	add_child(label)
+	var tween: Tween = label.create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(label, "position:y", label.position.y - 34.0, 1.1)
+	tween.tween_property(label, "modulate:a", 0.0, 1.1)
+	tween.chain().tween_callback(label.queue_free)
+
+
+## Builds the wall-tier system and the fortress view (SVTLW-63, floors and tiers).
+func _build_view() -> void:
+	tiers = WallTierManager.new()
+	add_child(tiers)
+	tiers.bind(game_state, wall)
+	tiers.load_default_tiers()
+	tiers.current_index = clampi(int(game_state.wall_tier) - 1, 0, WallTierManager.TIER_COUNT - 1)
+	# The scene's placeholder fortress shapes give way to the tiered wall and the recruited archers.
+	for placeholder: String in ["Fortress/Wall", "Fortress/Keep", "Fortress/ArcherA", "Fortress/ArcherB", "Fortress/ArcherC"]:
+		var shape: CanvasItem = get_node_or_null(placeholder)
+		if shape != null:
+			shape.visible = false
+	view = BattleView.new()
+	view.field = self
+	add_child(view)
+
+
+## Upgrades the wall one tier, with the tier's gold cost. Refusals say why (SVTLW-63).
+func upgrade_wall() -> bool:
+	ensure_ready()
+	if tiers.current_index >= WallTierManager.TIER_COUNT - 1:
+		notice.emit("The wall is already at its highest tier")
+		return false
+	var next: WallTier = tiers.tiers[tiers.current_index + 1]
+	if not game_state.can_afford(next.upgrade_cost):
+		notice.emit("Wall upgrade needs %d gold, you have %d" % [next.upgrade_cost, game_state.gold])
+		return false
+	if not tiers.upgrade_tier():
+		notice.emit("Wall upgrade refused")
+		return false
+	notice.emit("Wall upgraded to %s" % next.display_name)
+	return true
 
 
 ## First fixed slot with nothing built or building on it. -1 when every slot is taken.
@@ -179,8 +241,16 @@ func start_wave() -> bool:
 func recruit_archer(at: Vector2) -> Archer:
 	ensure_ready()
 	if _challenge_restriction() == "no_archers":
+		notice.emit("Challenge this week: no archers")
 		return null
-	return units.recruit("archer", at)
+	var reason: String = units.recruit_block_reason("archer")
+	if reason != "":
+		notice.emit(reason)
+		return null
+	var archer: Archer = units.recruit("archer", at)
+	if archer != null:
+		float_text(at, "Archer recruited", Color(0.7, 0.9, 1.0))
+	return archer
 
 
 ## The restriction of this week's challenge when challenge mode is on, else "" (SVTLW-77).
@@ -255,6 +325,8 @@ func step_ticks(count: int) -> void:
 const RESEARCH_POINTS_PER_WAVE: int = 1
 var research: ResearchManager = null
 var research_panel: ResearchPanel = null
+var tiers: WallTierManager = null
+var view: BattleView = null
 
 
 func _build_research() -> void:
@@ -265,6 +337,29 @@ func _build_research() -> void:
 	add_child(research_panel)
 	research_panel.bind(research)
 	research_panel.visible = false
+
+
+## Enemy types unlocked by wave number. Every wave mixes the types unlocked so far, so waves are not one type each.
+const ENEMY_UNLOCK_WAVES: Dictionary = {
+	"undead_infantry": 1,
+	"runner": 4,
+	"armoured_brute": 7,
+	"shield_bearer": 10,
+	"climber": 13,
+}
+var _spawn_counter: int = 0
+
+
+## The next enemy for a wave: cycles through the types unlocked by that wave.
+func _mixed_enemy_for_wave(wave_number: int) -> String:
+	var pool: Array[String] = []
+	for id: String in ENEMY_UNLOCK_WAVES:
+		if wave_number >= int(ENEMY_UNLOCK_WAVES[id]):
+			pool.append(id)
+	if pool.is_empty():
+		pool.append("undead_infantry")
+	_spawn_counter += 1
+	return pool[(_spawn_counter - 1) % pool.size()]
 
 
 ## Builds the meta-game connections. Overseer messages load from resources/overseer (SVTLW-67, 68).
@@ -407,7 +502,7 @@ func _apply_exploit_effects() -> void:
 
 func _connect_systems() -> void:
 	clock.tick_advanced.connect(_on_tick)
-	waves.enemy_spawn_requested.connect(func(id: String) -> void: enemies.spawn(id))
+	waves.enemy_spawn_requested.connect(func(_id: String) -> void: enemies.spawn(_mixed_enemy_for_wave(waves.current_wave)))
 	waves.wave_completed.connect(_on_wave_completed)
 	enemies.enemy_removed.connect(func(_e: Enemy) -> void: waves.report_enemy_removed())
 	enemies.wall_attacked.connect(func(damage: float) -> void:
@@ -503,6 +598,8 @@ func _on_enemy_removed_for_objectives(enemy: Enemy) -> void:
 	if enemy.health > 0.0:
 		return
 	var enemy_id: String = enemy.definition.enemy_id
+	if enemy.definition.gold_reward > 0:
+		float_text(enemy.global_position, "+%d gold" % enemy.definition.gold_reward, Color(1.0, 0.85, 0.3))
 	objectives.record_kill(enemy_id)
 	final_battle.record_kill(enemy_id)
 	meta.on_kill(enemy_id)
