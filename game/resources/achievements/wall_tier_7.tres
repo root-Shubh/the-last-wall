@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="Achievement" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/achievement.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+achievement_id = "wall_tier_7"
+display_name = "Legendary Bastion"
+description = "Raise the wall to tier 7."
+stat = "wall_tier"
+threshold = 7

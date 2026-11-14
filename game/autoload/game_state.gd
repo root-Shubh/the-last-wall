@@ -36,6 +36,9 @@ var character_id: String = ""
 var character_name: String = ""
 ## Story flags such as intro_seen (SVTLW-41). Values are booleans.
 var flags: Dictionary = {}
+## Lifetime statistics and unlocked achievements (SVTLW-78). Optional in saves.
+var stats: StatsTracker = StatsTracker.new()
+var achievements: Achievements = Achievements.new()
 
 
 ## Restores every value to a new game.
@@ -52,6 +55,8 @@ func reset() -> void:
 	character_id = ""
 	character_name = ""
 	flags.clear()
+	stats.reset()
+	achievements.reset()
 	resources_changed.emit(gold)
 	_emit_materials()
 	wave_changed.emit(current_wave)
@@ -201,6 +206,8 @@ func to_dict() -> Dictionary:
 		"flags": flags.duplicate(),
 		"production": production_levels.duplicate(),
 		"wall_tier": wall_tier,
+		"stats": stats.to_dict(),
+		"achievements": achievements.unlocked_ids(),
 	}
 
 
@@ -248,6 +255,10 @@ func from_dict(data: Dictionary) -> bool:
 	var raw_tier: Variant = data.get("wall_tier", 1)
 	if _is_non_negative_whole(raw_tier) and int(raw_tier) >= 1:
 		new_tier = mini(int(raw_tier), MAX_WALL_TIER)
+
+	# Stats and achievements (SVTLW-78) are optional; invalid values fall back to zeros and no unlocks.
+	stats.from_dict(data.get("stats", {}))
+	achievements.set_unlocked(data.get("achievements", []))
 
 	gold = int(data["gold"])
 	wall_tier = new_tier
