@@ -10,6 +10,11 @@ config/description="Incremental fortress-defence game (dark fantasy, side view).
 config/features=PackedStringArray("4.7", "GL Compatibility")
 run/main_scene="res://scenes/main.tscn"
 
+[autoload]
+
+GameState="*res://autoload/game_state.gd"
+SaveManager="*res://autoload/save_manager.gd"
+
 [display]
 
 window/size/viewport_width=1280
