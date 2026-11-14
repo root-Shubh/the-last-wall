@@ -16,14 +16,14 @@ var _ticks_since_attack: int = 0
 
 
 ## Prepares the enemy for the battlefield. Must be called before the first tick.
-func setup(data: EnemyDefinition, start_x: float, wall_stop_x: float) -> void:
+func setup(data: EnemyDefinition, start_x: float, wall_stop_x: float, lane_y: float = 0.0) -> void:
 	definition = data
 	health = data.max_health
 	alive = true
 	at_wall = false
 	_ticks_since_attack = 0
 	_wall_stop_x = wall_stop_x
-	position.x = start_x
+	position = Vector2(start_x, lane_y)
 
 
 ## Advances one simulation tick: walk until the wall, then attack on the interval.
