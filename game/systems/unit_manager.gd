@@ -26,6 +26,19 @@ func _rebuild_index() -> void:
 		_by_id[definition.unit_id] = definition
 
 
+## Upgrade multipliers applied to every archer, present and future (SVTLW-39).
+var archer_damage_multiplier: float = 1.0
+var archer_speed_multiplier: float = 1.0
+
+
+func set_archer_multipliers(damage: float, speed: float) -> void:
+	archer_damage_multiplier = damage
+	archer_speed_multiplier = speed
+	for archer: Archer in archers:
+		archer.damage_multiplier = damage
+		archer.attack_speed_multiplier = speed
+
+
 func population_used() -> int:
 	var used: int = 0
 	for archer: Archer in archers:
@@ -49,6 +62,8 @@ func recruit(unit_id: String, at: Vector2) -> Archer:
 	var archer: Archer = Archer.new()
 	add_child(archer)
 	archer.setup(definition, at, _rng)
+	archer.damage_multiplier = archer_damage_multiplier
+	archer.attack_speed_multiplier = archer_speed_multiplier
 	archer.died.connect(_on_archer_died)
 	archers.append(archer)
 	unit_recruited.emit(archer)

@@ -16,6 +16,7 @@ var units: UnitManager
 var projectiles: ProjectilePool
 var rewards: RewardTracker
 var wall: WallManager
+var upgrades: UpgradeManager
 var hud: TopBar
 var settings: SettingsStore
 var damage_numbers: DamageNumbers
@@ -108,6 +109,37 @@ func _build_systems() -> void:
 	add_child(wall)
 	wall.bind(game_state)
 
+	upgrades = UpgradeManager.new()
+	upgrades.definitions = [
+		load("res://resources/upgrades/archer_damage.tres"),
+		load("res://resources/upgrades/archer_attack_speed.tres"),
+		load("res://resources/upgrades/wall_max_health.tres"),
+		load("res://resources/upgrades/repair_rate.tres"),
+		load("res://resources/upgrades/gold_per_kill.tres"),
+	]
+	upgrades.state = game_state
+	add_child(upgrades)
+
+
+## Base wall health before upgrades (SVTLW-39).
+const BASE_WALL_MAX_HEALTH: int = 100
+
+
+## Buys one upgrade level. Returns false if it is blocked (SVTLW-39).
+func buy_upgrade(upgrade_id: String) -> bool:
+	ensure_ready()
+	return upgrades.purchase(upgrade_id)
+
+
+## Pushes every upgrade total into the systems it changes (SVTLW-39).
+func _apply_upgrade_effects() -> void:
+	units.set_archer_multipliers(
+		1.0 + upgrades.effect_total("archer_damage"),
+		1.0 + upgrades.effect_total("archer_attack_speed"))
+	game_state.set_wall_max_health(BASE_WALL_MAX_HEALTH + roundi(upgrades.effect_total("wall_max_health")))
+	wall.repair_per_second = upgrades.effect_total("repair_rate")
+	rewards.kill_gold_bonus = roundi(upgrades.effect_total("gold_per_kill"))
+
 
 func _connect_systems() -> void:
 	clock.tick_advanced.connect(_on_tick)
@@ -121,6 +153,8 @@ func _connect_systems() -> void:
 	wall.wall_destroyed.connect(_on_wall_destroyed)
 	wall.damage_state_changed.connect(_on_wall_state_changed)
 	_on_wall_state_changed(wall.current_state())
+	upgrades.effects_changed.connect(_apply_upgrade_effects)
+	_apply_upgrade_effects()
 
 
 func _on_tick(tick_index: int) -> void:
