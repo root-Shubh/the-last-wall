@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ResearchDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/research_definition.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+research_id = "sim_memory_corruption"
+display_name = "Memory Corruption"
+branch = "simulation_exploitation"
+prerequisite_id = "sim_reality_desync"
+effect_key = "memory_corruption_debuff"
+effect_value = 0.10
+cost = 4

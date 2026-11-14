@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ResearchDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/research_definition.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+research_id = "sim_reality_desync"
+display_name = "Reality Desync"
+branch = "simulation_exploitation"
+prerequisite_id = "sim_parallel_combat"
+effect_key = "reality_desync_vs_machines"
+effect_value = 0.15
+cost = 3
