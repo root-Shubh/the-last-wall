@@ -40,7 +40,7 @@ func on_tick(_tick_index: int, enemies: Array) -> void:
 	var roll: float = _rng.randf()
 	var damage: float = DamageCalculator.calculate(
 		definition.base_damage, damage_multiplier, definition.crit_chance, definition.crit_multiplier,
-		target.definition.armour, 1.0, roll)
+		maxf(target.definition.armour - definition.armour_penetration, 0.0), 1.0, roll)
 	fire_requested.emit(global_position, target, damage)
 
 

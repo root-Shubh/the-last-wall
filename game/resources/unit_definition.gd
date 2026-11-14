@@ -15,3 +15,5 @@ extends Resource
 @export var recruit_cost: int = 20
 ## Population slots this unit occupies.
 @export var population_cost: int = 1
+## Reduces the target armour by this much when the unit hits (SVTLW-51).
+@export var armour_penetration: float = 0.0

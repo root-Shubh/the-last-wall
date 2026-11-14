@@ -102,7 +102,13 @@ func _build_systems() -> void:
 	add_child(projectiles)
 
 	units = UnitManager.new()
-	units.unit_definitions = [load("res://resources/units/archer.tres")]
+	units.unit_definitions = [
+		load("res://resources/units/archer.tres"),
+		load("res://resources/units/crossbowman.tres"),
+		load("res://resources/units/gunner.tres"),
+		load("res://resources/units/spearman.tres"),
+		load("res://resources/units/swordsman.tres"),
+	]
 	units.state = game_state
 	add_child(units)
 

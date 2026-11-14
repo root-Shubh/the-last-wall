@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="UnitDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/unit_definition.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+unit_id = "gunner"
+display_name = "Gunner"
+max_health = 25.0
+base_damage = 22.0
+armour = 0.0
+attack_interval_ticks = 24
+attack_range = 340.0
+crit_chance = 0.1
+crit_multiplier = 2.0
+recruit_cost = 45
+population_cost = 2
+armour_penetration = 3.0

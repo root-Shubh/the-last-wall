@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="UnitDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/unit_definition.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+unit_id = "crossbowman"
+display_name = "Crossbowman"
+max_health = 30.0
+base_damage = 9.0
+armour = 0.0
+attack_interval_ticks = 12
+attack_range = 280.0
+crit_chance = 0.08
+crit_multiplier = 2.0
+recruit_cost = 30
+population_cost = 1
+armour_penetration = 2.0

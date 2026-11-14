@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="UnitDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/unit_definition.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+unit_id = "swordsman"
+display_name = "Swordsman"
+max_health = 50.0
+base_damage = 8.0
+armour = 0.0
+attack_interval_ticks = 10
+attack_range = 45.0
+crit_chance = 0.05
+crit_multiplier = 2.0
+recruit_cost = 25
+population_cost = 1
+armour_penetration = 0.0
