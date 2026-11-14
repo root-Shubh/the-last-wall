@@ -1,0 +1,60 @@
+[gd_resource type="Resource" script_class="WaveStageTable" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://resources/wave_stages.gd" id="1_table"]
+[ext_resource type="Script" path="res://resources/wave_stage.gd" id="2_stage"]
+
+[sub_resource type="Resource" id="stage_1"]
+script = ExtResource("2_stage")
+stage_name = "Skirmish"
+first_wave = 1
+last_wave = 30
+enemy_ids = PackedStringArray("undead_infantry", "runner")
+enemy_weights = PackedInt32Array(10, 3)
+base_count = 5
+count_growth = 0.4
+base_interval_ticks = 20
+interval_decrease = 0.1
+min_interval_ticks = 8
+
+[sub_resource type="Resource" id="stage_2"]
+script = ExtResource("2_stage")
+stage_name = "Swarm"
+first_wave = 31
+last_wave = 70
+enemy_ids = PackedStringArray("undead_infantry", "runner")
+enemy_weights = PackedInt32Array(6, 5)
+base_count = 12
+count_growth = 0.3
+base_interval_ticks = 16
+interval_decrease = 0.05
+min_interval_ticks = 10
+
+[sub_resource type="Resource" id="stage_3"]
+script = ExtResource("2_stage")
+stage_name = "Siege"
+first_wave = 71
+last_wave = 110
+enemy_ids = PackedStringArray("undead_infantry", "runner", "armoured_brute")
+enemy_weights = PackedInt32Array(4, 3, 3)
+base_count = 20
+count_growth = 0.25
+base_interval_ticks = 14
+interval_decrease = 0.03
+min_interval_ticks = 8
+
+[sub_resource type="Resource" id="stage_4"]
+script = ExtResource("2_stage")
+stage_name = "Onslaught"
+first_wave = 111
+last_wave = 150
+enemy_ids = PackedStringArray("undead_infantry", "runner", "armoured_brute")
+enemy_weights = PackedInt32Array(2, 4, 4)
+base_count = 30
+count_growth = 0.2
+base_interval_ticks = 12
+interval_decrease = 0.02
+min_interval_ticks = 6
+
+[resource]
+script = ExtResource("1_table")
+stages = [SubResource("stage_1"), SubResource("stage_2"), SubResource("stage_3"), SubResource("stage_4")]
