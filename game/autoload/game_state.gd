@@ -15,6 +15,8 @@ signal materials_changed(wood: int, stone: int, iron: int)
 const MATERIAL_IDS: Array[String] = ["wood", "stone", "iron"]
 
 const DEFAULT_WALL_MAX_HEALTH: int = 100
+## Specialisation path ids accepted by prestige_path (SVTLW-74).
+const PATH_IDS: Array[String] = ["warlord", "architect", "merchant", "scholar", "arcanist"]
 
 var gold: int = 0
 var wood: int = 0
@@ -36,10 +38,28 @@ var character_id: String = ""
 var character_name: String = ""
 ## Story flags such as intro_seen (SVTLW-41). Values are booleans.
 var flags: Dictionary = {}
+## Prestige state (SVTLW-73, SVTLW-74). Kept across run resets; only a new game clears them.
+var relics: int = 0
+## Permanent relic purchases: relic_id -> level. Written by PrestigeManager.
+var relic_levels: Dictionary = {}
+var prestige_count: int = 0
+## Chosen specialisation path id ("" for none). Only the choice is stored.
+var prestige_path: String = ""
 
 
 ## Restores every value to a new game.
 func reset() -> void:
+	relics = 0
+	relic_levels.clear()
+	prestige_count = 0
+	prestige_path = ""
+	character_id = ""
+	character_name = ""
+	reset_run()
+
+
+## Clears the per-run values for a prestige reset (SVTLW-73). Relics, relic levels, prestige count and path are kept.
+func reset_run() -> void:
 	gold = 0
 	wood = 0
 	stone = 0
@@ -49,8 +69,6 @@ func reset() -> void:
 	wall_max_health = DEFAULT_WALL_MAX_HEALTH
 	wall_health = wall_max_health
 	wall_tier = 1
-	character_id = ""
-	character_name = ""
 	flags.clear()
 	resources_changed.emit(gold)
 	_emit_materials()
@@ -201,6 +219,10 @@ func to_dict() -> Dictionary:
 		"flags": flags.duplicate(),
 		"production": production_levels.duplicate(),
 		"wall_tier": wall_tier,
+		"relics": relics,
+		"relic_levels": relic_levels.duplicate(),
+		"prestige_count": prestige_count,
+		"prestige_path": prestige_path,
 	}
 
 
@@ -249,7 +271,22 @@ func from_dict(data: Dictionary) -> bool:
 	if _is_non_negative_whole(raw_tier) and int(raw_tier) >= 1:
 		new_tier = mini(int(raw_tier), MAX_WALL_TIER)
 
+	# Prestige fields (SVTLW-73, SVTLW-74) are optional so older saves load with no relics and no path.
+	var new_relics: int = _whole_or_zero(data.get("relics", 0))
+	var new_prestige_count: int = _whole_or_zero(data.get("prestige_count", 0))
+	var raw_path: String = str(data.get("prestige_path", ""))
+	var new_relic_levels: Dictionary = {}
+	var raw_levels: Variant = data.get("relic_levels", {})
+	if typeof(raw_levels) == TYPE_DICTIONARY:
+		for key: Variant in raw_levels:
+			if typeof(key) == TYPE_STRING and _is_non_negative_whole(raw_levels[key]) and int(raw_levels[key]) >= 1:
+				new_relic_levels[key] = int(raw_levels[key])
+
 	gold = int(data["gold"])
+	relics = new_relics
+	prestige_count = new_prestige_count
+	prestige_path = raw_path if PATH_IDS.has(raw_path) else ""
+	relic_levels = new_relic_levels
 	wall_tier = new_tier
 	production_levels = new_production
 	wood = new_materials["wood"]
@@ -263,6 +300,10 @@ func from_dict(data: Dictionary) -> bool:
 	wave_changed.emit(current_wave)
 	wall_health_changed.emit(wall_health)
 	return true
+
+
+func _whole_or_zero(value: Variant) -> int:
+	return int(value) if _is_non_negative_whole(value) else 0
 
 
 func _is_non_negative_whole(value: Variant) -> bool:

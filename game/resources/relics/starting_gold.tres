@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="RelicUpgrade" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/relic_upgrade.gd" id="1_relic"]
+
+[resource]
+script = ExtResource("1_relic")
+relic_id = "starting_gold"
+display_name = "Royal Purse"
+effect = "starting_gold"
+effect_per_level = 50.0
+relic_cost = 1
+max_level = 5
