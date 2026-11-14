@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="EnemyDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/enemy_definition.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+enemy_id = "flying_machine"
+display_name = "Flying Machine"
+role = "climber"
+faction = "ancient_horde"
+max_health = 20.0
+armour = 1.0
+move_speed = 40.0
+wall_damage = 6.0
+attack_interval_ticks = 10
+gold_reward = 5
+bypass_wall_armour = true

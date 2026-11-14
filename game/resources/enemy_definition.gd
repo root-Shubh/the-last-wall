@@ -48,6 +48,14 @@ extends Resource
 ## Data only until battlefield integration applies it.
 @export var heal_on_hit: float = 0.0
 
+## Faction (SVTLW-81): "" for the original enemies, "corrupted" or "ancient_horde". Documented in docs/NARRATIVE.md.
+@export var faction: String = ""
+## Corrupted regeneration (SVTLW-81): health restored per second while alive, capped at max_health. Zero disables it.
+@export var regen_per_second: float = 0.0
+## Corrupted poison (SVTLW-81): damage per second its poison deals while the enemy is alive. Zero disables it.
+## Battlefield wiring for regen and poison is a later story; these fields are the data contract.
+@export var poison_damage_per_second: float = 0.0
+
 ## Defender ids that count as melee for melee_counter_only enemies. Units not yet in the game.
 const MELEE_DEFENDER_IDS: PackedStringArray = ["spearman", "swordsman"]
 

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="EnemyDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/enemy_definition.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+enemy_id = "corrupted_predator"
+display_name = "Corrupted Predator"
+role = "swarm"
+faction = "corrupted"
+max_health = 14.0
+armour = 0.0
+move_speed = 55.0
+wall_damage = 4.0
+attack_interval_ticks = 9
+gold_reward = 2
