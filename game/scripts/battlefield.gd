@@ -542,6 +542,7 @@ func _connect_systems() -> void:
 	_apply_upgrade_effects()
 	# Kills (health at zero) feed the objectives and the final battle. Enemies that reach the wall do not.
 	enemies.enemy_removed.connect(_on_enemy_removed_for_objectives)
+	production.produced.connect(_on_produced)
 	waves.wave_completed.connect(_on_wave_completed_for_objectives)
 
 
@@ -554,6 +555,9 @@ func _on_tick(tick_index: int) -> void:
 	constructions.on_tick(tick_index)
 	production.on_tick(tick_index)
 	_tick_index = tick_index
+	# Autosave every 30 seconds of game time, so a crash does not lose recent builds (save gap).
+	if tick_index % 300 == 0:
+		_autosave_pending = true
 	for structure: DefenceStructure in _defences.values():
 		# A slot switched off by the Overseer stops firing until it comes back (SVTLW-83).
 		if final_battle.active and final_battle.slot_disabled(structure.slot):
@@ -574,6 +578,7 @@ func _on_wave_completed(_wave_number: int) -> void:
 
 ## A finished tower or archer platform gets a DefenceStructure on its slot. A production building is registered (SVTLW-100).
 func _on_construction_completed(building_id: String, slot: int) -> void:
+	_autosave_pending = true
 	var data: BuildingDefinition = constructions.definition(building_id)
 	if data.attack_damage > 0.0:
 		var structure: DefenceStructure = DefenceStructure.new()
@@ -622,6 +627,14 @@ func _on_enemy_removed_for_objectives(enemy: Enemy) -> void:
 		if reward > 0:
 			game_state.add_gold(reward)
 			game_state.set_flag(CampaignObjectives.FLAG_REGION_ONE, true)
+
+
+## A building gave resources: float the amount over its slot (feedback).
+func _on_produced(building_id: String, resource: String, amount: int) -> void:
+	var slot: int = constructions.slot_of(building_id)
+	if slot < 0:
+		return
+	float_text(SLOT_POSITIONS[slot], "+%d %s" % [amount, resource], Color(0.75, 0.9, 0.55))
 
 
 func _on_wave_completed_for_objectives(wave_number: int) -> void:

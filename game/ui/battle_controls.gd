@@ -45,6 +45,7 @@ var ending_label: Label = null
 var message_label: Label = null
 var _prestige_panel: VBoxContainer = null
 var _prestige_holder: PanelContainer = null
+var _game_over_panel: PanelContainer = null
 
 
 func bind(battlefield: Battlefield) -> void:
@@ -56,6 +57,7 @@ func bind(battlefield: Battlefield) -> void:
 	field.death_line.connect(show_message)
 	field.region_entered.connect(func(region_name: String) -> void: show_message("Region: " + region_name))
 	field.notice.connect(show_message)
+	field.game_over.connect(show_game_over)
 	field.achievement_unlocked.connect(func(achievement_id: String) -> void: show_message("Achievement: " + achievement_id))
 	show_region_and_challenge()
 
@@ -222,3 +224,39 @@ func _button(parent: Node, text: String, action: Callable) -> void:
 	button.text = text
 	button.pressed.connect(action)
 	parent.add_child(button)
+
+
+## The wall has fallen. Offers a way back to the menu or out of the game (game-over screen, was missing).
+func show_game_over() -> void:
+	if _game_over_panel != null:
+		return
+	_game_over_panel = PanelContainer.new()
+	_game_over_panel.position = Vector2(340.0, 230.0)
+	_game_over_panel.custom_minimum_size = Vector2(600.0, 240.0)
+	var style: StyleBoxFlat = StyleBoxFlat.new()
+	style.bg_color = Color(0.08, 0.04, 0.04, 0.97)
+	style.border_color = Color(0.7, 0.2, 0.15)
+	style.set_border_width_all(3)
+	style.set_corner_radius_all(6)
+	style.set_content_margin_all(16)
+	_game_over_panel.add_theme_stylebox_override("panel", style)
+	add_child(_game_over_panel)
+	var column: VBoxContainer = VBoxContainer.new()
+	column.add_theme_constant_override("separation", 14)
+	_game_over_panel.add_child(column)
+	var title: Label = Label.new()
+	title.text = "THE WALL HAS FALLEN"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 34)
+	title.add_theme_color_override("font_color", Color(0.9, 0.5, 0.4))
+	column.add_child(title)
+	var detail: Label = Label.new()
+	detail.text = "Your last save is kept. Return to the menu to continue from it."
+	detail.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	column.add_child(detail)
+	var row: HBoxContainer = HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 20)
+	column.add_child(row)
+	_button(row, "Main menu", func() -> void: get_tree().reload_current_scene())
+	_button(row, "Quit", func() -> void: quit_requested.emit())

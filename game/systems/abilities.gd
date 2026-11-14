@@ -83,7 +83,7 @@ func refusal_reason(id: String, tick: int, researched: Array) -> String:
 		return "Unknown ability"
 	if not is_unlocked(id, researched):
 		var needed: String = DEFINITIONS[id]["unlock_research"]
-		return "Locked: research %s first" % needed.replace("_", " ")
+		return "Locked: research %s first" % needed.replace("_", " ").capitalize()
 	var remaining: int = cooldown_remaining(id, tick)
 	if remaining > 0:
 		return "Ready in %d seconds" % ceili(float(remaining) / 10.0)
