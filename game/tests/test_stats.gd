@@ -11,6 +11,7 @@ func _initialize() -> void:
 	_test_save_round_trip()
 	_test_malformed_stats()
 	_test_screen_labels()
+	_test_death_lines()
 
 	print("RESULT: %s (%d failure(s))" % ["PASS" if _failures == 0 else "FAIL", _failures])
 	quit(0 if _failures == 0 else 1)
@@ -125,3 +126,20 @@ func _test_screen_labels() -> void:
 	_check(texts.any(func(text: String) -> bool: return text.begins_with("[Locked] Statistically Unusual")), "screen lists locked achievements")
 	_check(StatsScreen.format_playtime(3725.0) == "1:02:05", "playtime formats as hours, minutes and seconds")
 	screen.free()
+
+
+func _test_death_lines() -> void:
+	print("death counter")
+	var stats: StatsTracker = StatsTracker.new()
+	var deaths: DeathCounter = DeathCounter.new(stats)
+	var fired: Dictionary = {}
+	for count: int in range(1, 348):
+		for line: String in deaths.on_death():
+			fired[count] = line
+	_check(fired.size() == 4, "exactly four death lines fire across 347 deaths")
+	_check(fired.get(1, "") == DeathCounter.LINES[1], "first death fires the early line")
+	_check(fired.get(10, "") == DeathCounter.LINES[10], "tenth death fires the later line")
+	_check(fired.get(100, "") == DeathCounter.LINES[100], "hundredth death fires the 100 line")
+	_check(fired.get(347, "") == "YOU HAVE FAILED 347 TIMES. WHY DO YOU CONTINUE?", "347th death fires the final line")
+	_check(stats.deaths == 347, "death total is kept in StatsTracker")
+	_check(deaths.on_death().is_empty(), "a line does not fire again after its threshold")
