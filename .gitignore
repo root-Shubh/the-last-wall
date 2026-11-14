@@ -1,0 +1,23 @@
+# Godot 4 generated files
+.godot/
+*.translation
+*.tmp
+
+# Exports and build output
+build/
+export/
+*.exe
+*.pck
+*.zip
+
+# Local settings and secrets
+.env
+*.local.cfg
+.vscode/
+.idea/
+*.token
+*.secret
+
+# OS files
+Thumbs.db
+.DS_Store
