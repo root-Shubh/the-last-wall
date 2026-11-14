@@ -1,0 +1,10 @@
+{
+	"schema_version": 1,
+	"state": {
+		"gold": 340,
+		"wave": 4,
+		"wall_health": 80,
+		"wall_max_health": 120
+	},
+	"extra": {}
+}
