@@ -35,6 +35,10 @@ var instability: float = 0.0
 ## Completed post-game cycles (SVTLW-85). Zero until the canonical ending is seen and a cycle is finished.
 const MAX_POST_GAME_CYCLES: int = 1000
 var post_game_cycles: int = 0
+## Unix time of the last save, for offline progress (SVTLW-75). 0 means never recorded.
+var last_saved_unix: int = 0
+## Player choice to allow passive offline production on return (SVTLW-75).
+var offline_enabled: bool = true
 
 ## Cosmetic and narrative only (SVTLW-42). Both characters play identically.
 const CHARACTER_IDS: Array[String] = ["male", "female"]
@@ -78,6 +82,8 @@ func reset_run() -> void:
 	wall_max_health = DEFAULT_WALL_MAX_HEALTH
 	wall_health = wall_max_health
 	wall_tier = 1
+	last_saved_unix = 0
+	offline_enabled = true
 	flags.clear()
 	research = {}
 	resources_changed.emit(gold)
@@ -236,6 +242,8 @@ func to_dict() -> Dictionary:
 		"instability": instability,
 		"research": research.duplicate(true),
 		"post_game_cycles": post_game_cycles,
+		"last_saved_unix": last_saved_unix,
+		"offline_enabled": offline_enabled,
 	}
 
 
@@ -323,6 +331,15 @@ func from_dict(data: Dictionary) -> bool:
 	prestige_count = new_prestige_count
 	prestige_path = raw_path if PATH_IDS.has(raw_path) else ""
 	relic_levels = new_relic_levels
+	# Offline progress fields (SVTLW-75) are optional so older saves load with defaults.
+	var new_saved_unix: int = 0
+	var raw_saved: Variant = data.get("last_saved_unix", 0)
+	if _is_non_negative_whole(raw_saved):
+		new_saved_unix = int(raw_saved)
+	var new_offline: bool = typeof(data.get("offline_enabled", true)) == TYPE_BOOL and bool(data.get("offline_enabled", true))
+
+	last_saved_unix = new_saved_unix
+	offline_enabled = new_offline
 	wall_tier = new_tier
 	post_game_cycles = new_cycles
 	production_levels = new_production

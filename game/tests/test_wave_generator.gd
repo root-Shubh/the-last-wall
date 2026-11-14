@@ -10,7 +10,7 @@ var _failures: int = 0
 
 func _initialize() -> void:
 	var table: WaveStageTable = load("res://resources/waves/wave_stages.tres")
-	_check(table != null and table.stages.size() == 4, "stage table loads with 4 stages")
+	_check(table != null and table.stages.size() == 5, "stage table loads with 4 numbered stages and the Endless stage")
 	if table != null:
 		var generator: WaveGenerator = WaveGenerator.new()
 		generator.stage_table = table
@@ -43,7 +43,7 @@ func _test_all_waves(generator: WaveGenerator) -> void:
 			continue
 		min_seen = mini(min_seen, definition.spawn_interval_ticks)
 	_check(bad.is_empty(), "every wave 1 to 150 has count >= 1 and interval >= minimum")
-	_check(generator.generate(LAST_WAVE + 1) == null, "wave 151 has no definition")
+	_check(generator.generate(LAST_WAVE + 1) != null, "wave 151 is the Endless stage (SVTLW-76)")
 	_check(generator.generate(0) == null, "wave 0 has no definition")
 	_check(min_seen >= 6, "intervals never drop below the Onslaught floor")
 
