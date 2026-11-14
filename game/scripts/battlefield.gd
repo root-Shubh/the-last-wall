@@ -16,6 +16,7 @@ var units: UnitManager
 var projectiles: ProjectilePool
 var rewards: RewardTracker
 var wall: WallManager
+var hud: TopBar
 var _built: bool = false
 
 
@@ -34,6 +35,9 @@ func ensure_ready() -> void:
 		game_state = get_node_or_null("/root/GameState")
 	_build_systems()
 	_connect_systems()
+	hud = TopBar.new()
+	add_child(hud)
+	hud.bind(game_state, clock, waves, wall)
 
 
 ## Starts the next wave from the catalog. Returns false if one is already running.
