@@ -38,6 +38,8 @@ func ensure_ready() -> void:
 	clock = get_node("SimulationClock")
 	if game_state == null:
 		game_state = get_node_or_null("/root/GameState")
+	if save_manager == null:
+		save_manager = get_node_or_null("/root/SaveManager")
 	settings = SettingsStore.new()
 	settings.load_from()
 	damage_numbers = DamageNumbers.new()
@@ -144,6 +146,7 @@ func _apply_upgrade_effects() -> void:
 func _connect_systems() -> void:
 	clock.tick_advanced.connect(_on_tick)
 	waves.enemy_spawn_requested.connect(func(id: String) -> void: enemies.spawn(id))
+	waves.wave_completed.connect(_on_wave_completed)
 	enemies.enemy_removed.connect(func(_e: Enemy) -> void: waves.report_enemy_removed())
 	enemies.wall_attacked.connect(func(damage: float) -> void:
 		wall.attack(damage)
@@ -163,6 +166,62 @@ func _on_tick(tick_index: int) -> void:
 	units.on_tick(tick_index, enemies.enemies)
 	projectiles.on_tick(tick_index)
 	wall.on_tick(tick_index)
+	# Autosave runs after every system has finished this tick, never in the middle of one (SVTLW-45).
+	if _autosave_pending:
+		_autosave_pending = false
+		save_now()
+
+
+func _on_wave_completed(_wave_number: int) -> void:
+	_autosave_pending = true
+
+
+## Save and load (SVTLW-44, SVTLW-45). Game state is saved by SaveManager. The battlefield adds
+## its own part: the wave reached, upgrade levels and where each archer stands.
+var save_manager: Node = null
+var _autosave_pending: bool = false
+
+
+func save_now() -> bool:
+	ensure_ready()
+	if save_manager == null:
+		return false
+	var archer_positions: Array = []
+	for archer: Archer in units.archers:
+		archer_positions.append([archer.position.x, archer.position.y])
+	var extra: Dictionary = {
+		"battlefield": {
+			"wave": waves.current_wave,
+			"upgrades": upgrades.levels.duplicate(),
+			"archers": archer_positions,
+		},
+	}
+	return save_manager.save_game(extra)
+
+
+## Applies the battlefield part of the last loaded save. Call after SaveManager.load_game().
+func restore_from_save() -> bool:
+	ensure_ready()
+	if save_manager == null or not save_manager.last_extra.has("battlefield"):
+		return false
+	var saved: Dictionary = save_manager.last_extra["battlefield"]
+	if typeof(saved) != TYPE_DICTIONARY:
+		return false
+	waves.current_wave = clampi(int(saved.get("wave", 0)), 0, 1000)
+	var levels: Dictionary = saved.get("upgrades", {})
+	upgrades.levels = {}
+	for key: Variant in levels:
+		upgrades.levels[str(key)] = int(levels[key])
+	upgrades.effects_changed.emit()
+	for entry: Variant in saved.get("archers", []):
+		if typeof(entry) == TYPE_ARRAY and entry.size() == 2:
+			units.restore_unit("archer", Vector2(float(entry[0]), float(entry[1])))
+	return true
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST and _built:
+		save_now()
 
 
 func _on_unit_recruited(archer: Archer) -> void:

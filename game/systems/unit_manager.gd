@@ -58,7 +58,23 @@ func recruit(unit_id: String, at: Vector2) -> Archer:
 		return null
 	var definition: UnitDefinition = _by_id[unit_id]
 	_state().spend_gold(definition.recruit_cost)
+	return _spawn(definition, at)
 
+
+## Puts a unit back on the field from a save without spending gold (SVTLW-44).
+## Population is still checked. Returns null if it does not fit.
+func restore_unit(unit_id: String, at: Vector2) -> Archer:
+	if _by_id.is_empty():
+		_rebuild_index()
+	if not _by_id.has(unit_id):
+		return null
+	var definition: UnitDefinition = _by_id[unit_id]
+	if population_used() + definition.population_cost > population_cap:
+		return null
+	return _spawn(definition, at)
+
+
+func _spawn(definition: UnitDefinition, at: Vector2) -> Archer:
 	var archer: Archer = Archer.new()
 	add_child(archer)
 	archer.setup(definition, at, _rng)
