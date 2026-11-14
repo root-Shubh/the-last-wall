@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="BuildingDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/building_definition.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+building_id = "archer_platform"
+display_name = "Archer Platform"
+build_cost = 40
+build_time_ticks = 30
+max_level = 3
+required_slot = -1
+attack_damage = 4.0
+attack_interval_ticks = 8
+attack_range = 260.0
