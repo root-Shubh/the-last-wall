@@ -1,6 +1,11 @@
 [gd_scene format=3]
 
+[ext_resource type="Script" path="res://systems/simulation_clock.gd" id="1_clock"]
+
 [node name="Battlefield" type="Node2D"]
+
+[node name="SimulationClock" type="Node" parent="."]
+script = ExtResource("1_clock")
 
 [node name="Sky" type="ColorRect" parent="."]
 offset_right = 1280.0
