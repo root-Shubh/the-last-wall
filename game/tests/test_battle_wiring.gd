@@ -21,6 +21,7 @@ func _initialize() -> void:
 		_test_final_battle_start(field)
 		_test_restored_buildings(field, state)
 		_test_kill_stats(field, state)
+		_test_research_points(field, state)
 		field.queue_free()
 	print("RESULT: %s (%d failure(s))" % ["PASS" if _failures == 0 else "FAIL", _failures])
 	quit(0 if _failures == 0 else 1)
@@ -72,3 +73,11 @@ func _test_kill_stats(field: Battlefield, state: Node) -> void:
 	field._on_enemy_removed_for_objectives(enemy)
 	_check(state.stats.total_kills == before + 1, "a kill is counted in the stats")
 	_check(field.objectives.kills_of_target == 0 or field.objectives.kill_target_id == "runner", "kills feed the objectives")
+
+
+func _test_research_points(field: Battlefield, state: Node) -> void:
+	print("waves give research points")
+	state.research = {"points": 0, "researched": []}
+	field._on_wave_completed_for_objectives(1)
+	_check(state.research.get("points", 0) == Battlefield.RESEARCH_POINTS_PER_WAVE, "a finished wave adds research points")
+	_check(field.research_panel != null and not field.research_panel.visible, "the research panel starts hidden")

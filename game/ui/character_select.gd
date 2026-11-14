@@ -17,6 +17,12 @@ func build() -> void:
 		return
 	_built = true
 	layer = 30
+	# An opaque full-screen backdrop, so the main menu buttons behind the picker do not show through.
+	var backdrop: ColorRect = ColorRect.new()
+	backdrop.color = Color(0.12, 0.12, 0.14, 1.0)
+	backdrop.anchor_right = 1.0
+	backdrop.anchor_bottom = 1.0
+	add_child(backdrop)
 	var panel: VBoxContainer = VBoxContainer.new()
 	panel.position = Vector2(440.0, 200.0)
 	panel.custom_minimum_size = Vector2(400.0, 0.0)

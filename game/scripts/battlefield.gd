@@ -87,6 +87,7 @@ func ensure_ready() -> void:
 	add_child(damage_numbers)
 	_build_systems()
 	_build_meta()
+	_build_research()
 	_connect_systems()
 	hud = TopBar.new()
 	add_child(hud)
@@ -248,6 +249,22 @@ func step_ticks(count: int) -> void:
 	ensure_ready()
 	for i: int in range(count):
 		clock.advance(1.0 / SimulationClock.TICKS_PER_SECOND + 0.0001)
+
+
+## Research (SVTLW-61): the manager, and the panel the Research button opens. Points come from waves.
+const RESEARCH_POINTS_PER_WAVE: int = 1
+var research: ResearchManager = null
+var research_panel: ResearchPanel = null
+
+
+func _build_research() -> void:
+	research = ResearchManager.new()
+	research.load_definitions("res://resources/research")
+	research.bind(game_state)
+	research_panel = ResearchPanel.new()
+	add_child(research_panel)
+	research_panel.bind(research)
+	research_panel.visible = false
 
 
 ## Builds the meta-game connections. Overseer messages load from resources/overseer (SVTLW-67, 68).
@@ -505,6 +522,7 @@ func _on_enemy_removed_for_objectives(enemy: Enemy) -> void:
 func _on_wave_completed_for_objectives(wave_number: int) -> void:
 	var max_health: float = maxf(float(game_state.wall_max_health), 1.0)
 	objectives.record_wave_end(float(game_state.wall_health) / max_health)
+	research.add_points(RESEARCH_POINTS_PER_WAVE)
 	var intro: String = meta.start_region_overlord(wave_number)
 	if intro != "":
 		overseer_message.emit(intro)

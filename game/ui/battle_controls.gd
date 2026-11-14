@@ -1,5 +1,6 @@
-## On-screen battle controls (SVTLW-99): Recruit Archer, Start Wave, Save and Quit.
-## Each button calls the same method a test calls, so the buttons are covered by tests too.
+## On-screen battle controls (SVTLW-99). Two rows of buttons at the bottom: recruit, waves, buildings,
+## abilities, research, prestige and save. Prestige options open in a panel. Each button calls the same
+## method a test calls, so the buttons are covered by tests too. Layout fixed for SVTLW-104.
 class_name BattleControls
 extends CanvasLayer
 
@@ -10,6 +11,39 @@ var _built: bool = false
 const RECRUIT_START_X: float = 190.0
 const RECRUIT_STEP_X: float = 30.0
 const RECRUIT_Y: float = 300.0
+const ROW_A_Y: float = 640.0
+const ROW_B_Y: float = 680.0
+const PRESTIGE_PANEL_POSITION: Vector2 = Vector2(12.0, 230.0)
+const MESSAGE_POSITION: Vector2 = Vector2(12.0, 600.0)
+
+const BUILDING_IDS: Array[String] = ["tower", "archer_platform", "lumber_mill", "quarry", "iron_mine"]
+const BUILDING_LABELS: Dictionary = {
+	"tower": "Tower",
+	"archer_platform": "Archer Pad",
+	"lumber_mill": "Lumber",
+	"quarry": "Quarry",
+	"iron_mine": "Iron",
+}
+const ABILITY_LABELS: Dictionary = {
+	Abilities.RAIN_OF_ARROWS: "Rain",
+	Abilities.EMERGENCY_REPAIR: "Repair",
+	Abilities.REINFORCEMENT: "Reinforce",
+	Abilities.LAST_STAND: "Last Stand",
+}
+const PRESTIGE_RELICS: Array[String] = ["starting_gold", "archer_damage", "production", "population_slot"]
+const RELIC_LABELS: Dictionary = {
+	"starting_gold": "Gold",
+	"archer_damage": "Archers",
+	"production": "Production",
+	"population_slot": "Slot",
+}
+const PRESTIGE_PATHS: Array[String] = ["warlord", "architect", "merchant", "scholar", "arcanist"]
+
+## Label that shows the collapse and ending text (SVTLW-84).
+var ending_label: Label = null
+## Line for Overseer messages, death lines and achievements.
+var message_label: Label = null
+var _prestige_panel: VBoxContainer = null
 
 
 func bind(battlefield: Battlefield) -> void:
@@ -20,15 +54,15 @@ func bind(battlefield: Battlefield) -> void:
 	field.overseer_message.connect(show_message)
 	field.death_line.connect(show_message)
 	field.region_entered.connect(func(region_name: String) -> void: show_message("Region: " + region_name))
-	show_region_and_challenge()
 	field.achievement_unlocked.connect(func(achievement_id: String) -> void: show_message("Achievement: " + achievement_id))
+	show_region_and_challenge()
 
 
 ## Shows a short line for an Overseer message, a death line or an achievement (SVTLW-67, 68, 78, 79).
 func show_message(text: String) -> void:
 	if message_label == null:
 		message_label = Label.new()
-		message_label.position = Vector2(12.0, 650.0)
+		message_label.position = MESSAGE_POSITION
 		add_child(message_label)
 	message_label.text = text
 	message_label.visible = text != ""
@@ -39,43 +73,50 @@ func build() -> void:
 		return
 	_built = true
 	layer = 26
-	var row: HBoxContainer = HBoxContainer.new()
-	row.position = Vector2(12.0, 680.0)
-	add_child(row)
-	_button(row, "Recruit Archer", func() -> void: recruit())
-	_button(row, "Start Wave", func() -> void: start_wave())
-	# Every building gets a button (SVTLW-100 gaps: quarry and iron mine were not wired).
+	var row_a: HBoxContainer = HBoxContainer.new()
+	row_a.position = Vector2(12.0, ROW_A_Y)
+	add_child(row_a)
+	_button(row_a, "Recruit", func() -> void: recruit())
+	_button(row_a, "Start Wave", func() -> void: start_wave())
 	for id: String in BUILDING_IDS:
-		_button(row, "Build " + BUILDING_LABELS[id], func() -> void: build_building(id))
+		_button(row_a, BUILDING_LABELS[id], func() -> void: build_building(id))
+	_button(row_a, "Save", func() -> void: save())
+	_button(row_a, "Quit", func() -> void: quit_requested.emit())
+
+	var row_b: HBoxContainer = HBoxContainer.new()
+	row_b.position = Vector2(12.0, ROW_B_Y)
+	add_child(row_b)
 	for id: String in Abilities.DEFINITIONS:
-		_button(row, ABILITY_LABELS[id], func() -> void: use_ability(id))
-	_button(row, "Save", func() -> void: save())
-	_button(row, "Quit", func() -> void: quit_requested.emit())
+		_button(row_b, ABILITY_LABELS[id], func() -> void: use_ability(id))
+	_button(row_b, "Research", func() -> void: toggle_research())
+	_button(row_b, "Prestige Menu", func() -> void: toggle_prestige_panel())
+	_button(row_b, "Challenge", func() -> void: toggle_challenge())
+
+	_build_prestige_panel()
 	_build_ending_label()
-	_build_prestige_row()
 
 
-## Prestige, relic purchases and path choice (SVTLW-73, 74). Prestige clears the run and reloads the scene.
-func _build_prestige_row() -> void:
-	var row: HBoxContainer = HBoxContainer.new()
-	row.position = Vector2(12.0, 640.0)
-	add_child(row)
-	_button(row, "Prestige", func() -> void: prestige())
-	_button(row, "Challenge Mode", func() -> void: toggle_challenge())
+## Prestige, relic purchases and path choice (SVTLW-73, 74). Hidden until Prestige Menu is pressed.
+func _build_prestige_panel() -> void:
+	_prestige_panel = VBoxContainer.new()
+	_prestige_panel.position = PRESTIGE_PANEL_POSITION
+	_prestige_panel.visible = false
+	add_child(_prestige_panel)
+	_button(_prestige_panel, "Prestige now (resets the run)", func() -> void: prestige())
 	for relic_id: String in PRESTIGE_RELICS:
-		_button(row, "Relic " + RELIC_LABELS[relic_id], func() -> void: buy_relic(relic_id))
+		_button(_prestige_panel, "Buy relic: " + RELIC_LABELS[relic_id], func() -> void: buy_relic(relic_id))
 	for path_id: String in PRESTIGE_PATHS:
-		_button(row, "Path " + path_id.capitalize(), func() -> void: choose_path(path_id))
+		_button(_prestige_panel, "Choose path: " + path_id.capitalize(), func() -> void: choose_path(path_id))
 
 
-const PRESTIGE_RELICS: Array[String] = ["starting_gold", "archer_damage", "production", "population_slot"]
-const RELIC_LABELS: Dictionary = {
-	"starting_gold": "Gold",
-	"archer_damage": "Archers",
-	"production": "Production",
-	"population_slot": "Slot",
-}
-const PRESTIGE_PATHS: Array[String] = ["warlord", "architect", "merchant", "scholar", "arcanist"]
+func toggle_prestige_panel() -> void:
+	if _prestige_panel != null:
+		_prestige_panel.visible = not _prestige_panel.visible
+
+
+func toggle_research() -> void:
+	if field != null and field.research_panel != null:
+		field.research_panel.visible = not field.research_panel.visible
 
 
 func prestige() -> int:
@@ -102,34 +143,13 @@ func choose_path(path_id: String) -> bool:
 	return field != null and field.meta.choose_path(path_id)
 
 
-## Shows the current region and this week's challenge (SVTLW-81, 77).
+## Shows this week's challenge (SVTLW-77).
 func show_region_and_challenge() -> void:
 	if field == null:
 		return
 	var challenge: ChallengeDefinition = field.meta.current_challenge(int(Time.get_unix_time_from_system()))
 	if challenge != null:
 		show_message("Challenge this week: " + challenge.display_name)
-
-
-const BUILDING_IDS: Array[String] = ["tower", "archer_platform", "lumber_mill", "quarry", "iron_mine"]
-const BUILDING_LABELS: Dictionary = {
-	"tower": "Tower",
-	"archer_platform": "Archer Platform",
-	"lumber_mill": "Lumber Mill",
-	"quarry": "Quarry",
-	"iron_mine": "Iron Mine",
-}
-const ABILITY_LABELS: Dictionary = {
-	Abilities.RAIN_OF_ARROWS: "Rain of Arrows",
-	Abilities.EMERGENCY_REPAIR: "Emergency Repair",
-	Abilities.REINFORCEMENT: "Reinforcement",
-	Abilities.LAST_STAND: "Last Stand",
-}
-
-## Label that shows the collapse and ending text (SVTLW-84).
-var ending_label: Label = null
-## Line for Overseer messages, death lines and achievements.
-var message_label: Label = null
 
 
 func _build_ending_label() -> void:

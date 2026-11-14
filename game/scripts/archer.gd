@@ -124,3 +124,13 @@ func take_damage(amount: float) -> void:
 		health = 0.0
 		alive = false
 		died.emit(self)
+
+
+## Visual: a figure with a bow line, so recruits are visible on the wall (SVTLW-103).
+func _draw() -> void:
+	draw_rect(Rect2(Vector2(-6.0, -10.0), Vector2(12.0, 18.0)), Color(0.85, 0.85, 0.6))
+	draw_line(Vector2(6.0, -8.0), Vector2(10.0, 0.0), Color(0.5, 0.35, 0.2), 2.0)
+
+
+func _process(_delta: float) -> void:
+	queue_redraw()
