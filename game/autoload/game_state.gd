@@ -28,6 +28,10 @@ var wall_health: int = DEFAULT_WALL_MAX_HEALTH
 ## Current wall tier 1 to MAX_WALL_TIER (SVTLW-63). Set by WallTierManager.
 const MAX_WALL_TIER: int = 7
 var wall_tier: int = 1
+## Unix time of the last save, for offline progress (SVTLW-75). 0 means never recorded.
+var last_saved_unix: int = 0
+## Player choice to allow passive offline production on return (SVTLW-75).
+var offline_enabled: bool = true
 
 ## Cosmetic and narrative only (SVTLW-42). Both characters play identically.
 const CHARACTER_IDS: Array[String] = ["male", "female"]
@@ -49,6 +53,8 @@ func reset() -> void:
 	wall_max_health = DEFAULT_WALL_MAX_HEALTH
 	wall_health = wall_max_health
 	wall_tier = 1
+	last_saved_unix = 0
+	offline_enabled = true
 	character_id = ""
 	character_name = ""
 	flags.clear()
@@ -201,6 +207,8 @@ func to_dict() -> Dictionary:
 		"flags": flags.duplicate(),
 		"production": production_levels.duplicate(),
 		"wall_tier": wall_tier,
+		"last_saved_unix": last_saved_unix,
+		"offline_enabled": offline_enabled,
 	}
 
 
@@ -249,7 +257,16 @@ func from_dict(data: Dictionary) -> bool:
 	if _is_non_negative_whole(raw_tier) and int(raw_tier) >= 1:
 		new_tier = mini(int(raw_tier), MAX_WALL_TIER)
 
+	# Offline progress fields (SVTLW-75) are optional so older saves load with defaults.
+	var new_saved_unix: int = 0
+	var raw_saved: Variant = data.get("last_saved_unix", 0)
+	if _is_non_negative_whole(raw_saved):
+		new_saved_unix = int(raw_saved)
+	var new_offline: bool = typeof(data.get("offline_enabled", true)) == TYPE_BOOL and bool(data.get("offline_enabled", true))
+
 	gold = int(data["gold"])
+	last_saved_unix = new_saved_unix
+	offline_enabled = new_offline
 	wall_tier = new_tier
 	production_levels = new_production
 	wood = new_materials["wood"]
