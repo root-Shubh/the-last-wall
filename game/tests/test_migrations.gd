@@ -35,9 +35,11 @@ func _check(condition: bool, label: String) -> void:
 		print("  FAIL - %s" % label)
 
 
+## Removes the save and the temp and backup files SaveManager leaves beside it, so no run starts from another run's leftovers.
 func _remove_save() -> void:
-	if FileAccess.file_exists(SAVE_PATH):
-		DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
+	for path: String in [SAVE_PATH, "user://save_slot_1.tmp", "user://save_slot_1.bak"]:
+		if FileAccess.file_exists(path):
+			DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 
 
 ## Copies a res:// fixture byte for byte over the save path, as if the player had that file on disk.
@@ -121,7 +123,11 @@ func _test_round_trip(state: Node, saves: Node) -> void:
 	_check(saves.save_game({"battlefield": {"tick": 9}}), "save_game writes the state")
 	state.reset()
 	_check(saves.load_game(), "save_game output loads back")
-	_check(state.to_dict() == before, "loaded state equals the saved state")
+	var after: Dictionary = state.to_dict()
+	for key: Variant in before:
+		if before[key] != after.get(key):
+			print("        differs: %s before=%s after=%s" % [key, var_to_str(before[key]), var_to_str(after.get(key))])
+	_check(after == before, "loaded state equals the saved state")
 	_check(saves.last_extra.get("battlefield", {}).get("tick", -1) == 9, "extra data round trips")
 	_remove_save()
 
