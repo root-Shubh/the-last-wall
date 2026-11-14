@@ -45,3 +45,16 @@ Flag rules: an upgrade step is flagged when its DPS gain per gold is above 2x th
 - Survival is 100% for every build, so the reference wave is too easy to tell builds apart. A harder reference wave is needed before survival can guide balance. Using `WaveCatalog` instead of a fixed mix is the likely next step.
 - Shield bearers, range and armour penetration on archers are not modelled.
 - Nothing here changes balance values. Apply proposals only in a later story.
+
+## Generic balance for playtest (SVTLW-64 to 84 branch)
+
+The numbers in the game are generic defaults chosen for a first playable build, not tuned values:
+
+- Upgrade cost: 25 gold times the current level, for buildings and defence structures.
+- Ability cooldowns: Rain of Arrows 300 ticks, Emergency Repair 450, Reinforcement 600, Last Stand 900. Last Stand gives 60 ticks of wall immunity.
+- Region 1 objectives: 5 armoured brute kills, wall above half health at each wave end, no unit losses, and the Fallen Kingdom boss.
+- The Abomination: 600 health, hits of 12 or more are not reduced, lighter hits take 40 percent. Phases at 70, 40 and 15 percent health.
+- Wave 1000 final battle: phases end at 10, 25 and 45 cumulative kills. Overlords arrive every 120 ticks in phases 1 and 3. Overseer interventions switch off a defence slot for 90 ticks every 180 ticks in phases 2 and 3.
+- Simulation Exploitation effects: a proposal for where each effect applies (see battlefield.gd). Values come from the research definitions.
+
+Tune these after the first playtest. Record each change here with the playtest notes that led to it.
