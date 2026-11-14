@@ -56,6 +56,9 @@ var prestige_count: int = 0
 var prestige_path: String = ""
 ## Research save data (SVTLW-61): {"points": int, "researched": Array of ids}. Written by ResearchManager.
 var research: Dictionary = {}
+## Lifetime statistics and unlocked achievements (SVTLW-78). Optional in saves.
+var stats: StatsTracker = StatsTracker.new()
+var achievements: Achievements = Achievements.new()
 
 
 ## Restores every value to a new game.
@@ -86,6 +89,8 @@ func reset_run() -> void:
 	offline_enabled = true
 	flags.clear()
 	research = {}
+	stats.reset()
+	achievements.reset()
 	resources_changed.emit(gold)
 	_emit_materials()
 	wave_changed.emit(current_wave)
@@ -244,6 +249,8 @@ func to_dict() -> Dictionary:
 		"post_game_cycles": post_game_cycles,
 		"last_saved_unix": last_saved_unix,
 		"offline_enabled": offline_enabled,
+		"stats": stats.to_dict(),
+		"achievements": achievements.unlocked_ids(),
 	}
 
 
@@ -323,6 +330,9 @@ func from_dict(data: Dictionary) -> bool:
 	var raw_cycles: Variant = data.get("post_game_cycles", 0)
 	if _is_non_negative_whole(raw_cycles):
 		new_cycles = mini(int(raw_cycles), MAX_POST_GAME_CYCLES)
+	# Stats and achievements (SVTLW-78) are optional; invalid values fall back to zeros and no unlocks.
+	stats.from_dict(data.get("stats", {}))
+	achievements.set_unlocked(data.get("achievements", []))
 
 	gold = int(data["gold"])
 	instability = new_instability
