@@ -12,6 +12,7 @@ func _initialize() -> void:
 	_test_relic_purchases(state)
 	_test_relic_caps(state)
 	_test_save_fields(state)
+	_test_paths(state)
 	print("RESULT: %s (%d failure(s))" % ["PASS" if _failures == 0 else "FAIL", _failures])
 	quit(0 if _failures == 0 else 1)
 
@@ -125,3 +126,27 @@ func _test_save_fields(state: Node) -> void:
 	state.from_dict(bad)
 	_check(state.prestige_path == "" and state.relics == 0, "unknown path and negative relics are dropped on load")
 	state.reset()
+
+
+func _test_paths(state: Node) -> void:
+	print("specialisation paths")
+	var expected: Array[String] = ["warlord", "architect", "merchant", "scholar", "arcanist"]
+	for path_id: String in expected:
+		var data: PrestigePath = PrestigePath.load_by_id(path_id)
+		_check(data != null and data.path_id == path_id, "%s loads" % path_id)
+		if data == null:
+			continue
+		_check(data.bonus_stat != "" and data.bonus_value > 0.0, "%s has a numeric bonus" % path_id)
+		_check(data.mechanic_text != "" and not data.mechanic_effects.is_empty(), "%s has a mechanic" % path_id)
+		var hook: Dictionary = PrestigePath.hook_for(path_id, data.mechanic_event)
+		_check(not hook.is_empty() and hook == data.mechanic_effects, "%s hook fires on its event" % path_id)
+		_check(PrestigePath.hook_for(path_id, "no_such_event").is_empty(), "%s hook ignores other events" % path_id)
+	_check(PrestigePath.hook_for("unknown_path", "wave_cleared").is_empty(), "hook for an unknown path is empty")
+	var manager: PrestigeManager = PrestigeManager.new()
+	manager.state = state
+	root.add_child(manager)
+	state.reset()
+	_check(manager.choose_path("merchant") and state.prestige_path == "merchant", "a known path is chosen and stored")
+	_check(not manager.choose_path("paladin") and state.prestige_path == "merchant", "an unknown path is refused")
+	state.reset()
+	manager.free()

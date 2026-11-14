@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="PrestigePath" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/prestige_path.gd" id="1_path"]
+
+[resource]
+script = ExtResource("1_path")
+path_id = "arcanist"
+display_name = "Arcanist"
+bonus_stat = "archer_attack_speed"
+bonus_value = 0.05
+mechanic_text = "Projectiles can chain to a second enemy near the first."
+mechanic_event = "projectile_hit"
+mechanic_effects = {
+"chain_targets": 1,
+"chain_damage_fraction": 0.5
+}

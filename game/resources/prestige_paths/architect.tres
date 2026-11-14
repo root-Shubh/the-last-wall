@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="PrestigePath" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/prestige_path.gd" id="1_path"]
+
+[resource]
+script = ExtResource("1_path")
+path_id = "architect"
+display_name = "Architect"
+bonus_stat = "wall_max_health"
+bonus_value = 0.1
+mechanic_text = "Walls repair without spending gold or materials."
+mechanic_event = "wall_repair"
+mechanic_effects = {
+"repair_cost": 0
+}
