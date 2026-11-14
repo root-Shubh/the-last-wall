@@ -1,0 +1,51 @@
+[gd_resource type="Resource" script_class="DialogueSequence" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://resources/dialogue_sequence.gd" id="1_seq"]
+[ext_resource type="Script" path="res://resources/dialogue_line.gd" id="2_line"]
+
+[sub_resource type="Resource" id="l1"]
+script = ExtResource("2_line")
+speaker = "Friend"
+text = "Okay, you HAVE to try this. I've been working on it for weeks."
+
+[sub_resource type="Resource" id="l2"]
+script = ExtResource("2_line")
+speaker = "Player"
+text = "What is it?"
+
+[sub_resource type="Resource" id="l3"]
+script = ExtResource("2_line")
+speaker = "Friend"
+text = "Medieval survival thing. You build a fortress, defend it against increasingly ridiculous hordes. Pretty addictive, actually."
+
+[sub_resource type="Resource" id="l4"]
+script = ExtResource("2_line")
+speaker = "Player"
+text = "Sounds like a glorified tower defence game."
+
+[sub_resource type="Resource" id="l5"]
+script = ExtResource("2_line")
+speaker = "Friend"
+text = "Just try it."
+
+[sub_resource type="Resource" id="l6"]
+script = ExtResource("2_line")
+speaker = "Friend"
+text = "I'm just going to grab a coffee. Don't break anything."
+
+[sub_resource type="Resource" id="l7"]
+script = ExtResource("2_line")
+speaker = "SYSTEM"
+text = "SIMULATION ERROR: EXTERNAL CONNECTION LOST."
+duration_seconds = 2.0
+
+[sub_resource type="Resource" id="l8"]
+script = ExtResource("2_line")
+speaker = "SYSTEM"
+text = "WELCOME, COMMANDER. YOUR DEFENCE SIMULATION WILL NOW BEGIN."
+duration_seconds = 2.5
+
+[resource]
+script = ExtResource("1_seq")
+sequence_id = "opening"
+lines = Array[ExtResource("2_line")]([SubResource("l1"), SubResource("l2"), SubResource("l3"), SubResource("l4"), SubResource("l5"), SubResource("l6"), SubResource("l7"), SubResource("l8")])

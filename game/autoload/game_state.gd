@@ -16,6 +16,14 @@ var current_wave: int = 0
 var wall_max_health: int = DEFAULT_WALL_MAX_HEALTH
 var wall_health: int = DEFAULT_WALL_MAX_HEALTH
 
+## Cosmetic and narrative only (SVTLW-42). Both characters play identically.
+const CHARACTER_IDS: Array[String] = ["male", "female"]
+const NAME_MAX_LENGTH: int = 16
+var character_id: String = ""
+var character_name: String = ""
+## Story flags such as intro_seen (SVTLW-41). Values are booleans.
+var flags: Dictionary = {}
+
 
 ## Restores every value to a new game.
 func reset() -> void:
@@ -23,6 +31,9 @@ func reset() -> void:
 	current_wave = 0
 	wall_max_health = DEFAULT_WALL_MAX_HEALTH
 	wall_health = wall_max_health
+	character_id = ""
+	character_name = ""
+	flags.clear()
 	resources_changed.emit(gold)
 	wave_changed.emit(current_wave)
 	wall_health_changed.emit(wall_health)
@@ -87,12 +98,39 @@ func is_wall_destroyed() -> bool:
 	return wall_health <= 0
 
 
+## Sets a story flag. Flags are booleans only.
+func set_flag(flag_name: String, value: bool = true) -> void:
+	flags[flag_name] = value
+
+
+func has_flag(flag_name: String) -> bool:
+	return bool(flags.get(flag_name, false))
+
+
+## True when the id is a known character and the name is 1 to 16 characters after trimming.
+func is_valid_character(id: String, display_name: String) -> bool:
+	var trimmed: String = display_name.strip_edges()
+	return CHARACTER_IDS.has(id) and trimmed.length() >= 1 and trimmed.length() <= NAME_MAX_LENGTH
+
+
+## Sets the character when is_valid_character is true. Returns false and changes nothing otherwise.
+func set_character(id: String, display_name: String) -> bool:
+	if not is_valid_character(id, display_name):
+		return false
+	character_id = id
+	character_name = display_name.strip_edges()
+	return true
+
+
 func to_dict() -> Dictionary:
 	return {
 		"gold": gold,
 		"wave": current_wave,
 		"wall_health": wall_health,
 		"wall_max_health": wall_max_health,
+		"character_id": character_id,
+		"character_name": character_name,
+		"flags": flags.duplicate(),
 	}
 
 
@@ -107,6 +145,18 @@ func from_dict(data: Dictionary) -> bool:
 	var new_health: int = int(data["wall_health"])
 	if new_max <= 0 or new_health > new_max:
 		return false
+
+	# Character and flags are optional so saves from before SVTLW-41 and SVTLW-42 still load.
+	var new_id: String = str(data.get("character_id", ""))
+	var new_name: String = str(data.get("character_name", ""))
+	var new_flags: Dictionary = {}
+	if typeof(data.get("flags", {})) == TYPE_DICTIONARY:
+		for key: Variant in data.get("flags", {}):
+			if typeof(data["flags"][key]) == TYPE_BOOL:
+				new_flags[str(key)] = data["flags"][key]
+	character_id = new_id if CHARACTER_IDS.has(new_id) else ""
+	character_name = new_name if new_name.length() <= NAME_MAX_LENGTH else ""
+	flags = new_flags
 
 	gold = int(data["gold"])
 	current_wave = int(data["wave"])
