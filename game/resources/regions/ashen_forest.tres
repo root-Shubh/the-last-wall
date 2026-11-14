@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="Region" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/region.gd" id="1_region"]
+
+[resource]
+script = ExtResource("1_region")
+region_id = "ashen_forest"
+display_name = "Ashen Forest"
+first_wave = 51
+last_wave = 150
+enemy_ids = PackedStringArray("undead_infantry", "runner", "climber", "corrupted_predator", "poison_spitter")
+boss_id = "warden"
+objective_text = "Clear the ash paths and stop the corruption spreading to the wall road."

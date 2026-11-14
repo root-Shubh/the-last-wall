@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="Region" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/region.gd" id="1_region"]
+
+[resource]
+script = ExtResource("1_region")
+region_id = "dead_capital"
+display_name = "Dead Capital"
+first_wave = 451
+last_wave = 600
+enemy_ids = PackedStringArray("undead_infantry", "armoured_brute", "ancient_construct", "guardian", "flying_machine", "regenerator")
+boss_id = "architect"
+objective_text = "Survive the massive sieges of the Dead Capital and end the Architect's control of the city."
