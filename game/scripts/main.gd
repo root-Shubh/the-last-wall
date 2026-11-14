@@ -65,6 +65,8 @@ func _show_picker() -> void:
 ## The intro plays first when a new game starts. The battlefield opens when the intro ends.
 func _on_new_game_started(_character_id: String, _display_name: String) -> void:
 	picker.hide()
+	# The menu stays out of sight during the intro, so its buttons do not show behind the dialogue.
+	menu.visible = false
 	if dialogue.is_playing():
 		dialogue.sequence_finished.connect(func(_id: String) -> void: _enter_battlefield(false), CONNECT_ONE_SHOT)
 	else:
