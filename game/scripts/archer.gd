@@ -12,6 +12,9 @@ var alive: bool = false
 ## Set from upgrades (SVTLW-39). 1.0 means no change.
 var damage_multiplier: float = 1.0
 var attack_speed_multiplier: float = 1.0
+## Targeting (SVTLW-58). The default CLOSEST keeps the original behaviour.
+var targeting_mode: int = Targeting.Mode.CLOSEST
+var priority_id_for_mode: String = ""
 var _ticks_since_shot: int = 0
 var _rng: RandomNumberGenerator = null
 
@@ -33,7 +36,7 @@ func on_tick(_tick_index: int, enemies: Array) -> void:
 	var interval: int = maxi(roundi(definition.attack_interval_ticks / maxf(attack_speed_multiplier, 0.01)), 1)
 	if _ticks_since_shot < interval:
 		return
-	var target: Enemy = closest_in_range(enemies)
+	var target: Enemy = select_target(enemies)
 	if target == null:
 		return
 	_ticks_since_shot = 0
@@ -44,18 +47,20 @@ func on_tick(_tick_index: int, enemies: Array) -> void:
 	fire_requested.emit(global_position, target, damage)
 
 
+## Sets how this archer chooses targets (SVTLW-58). priority_id is only used by PRIORITY_TYPE.
+func set_targeting_mode(mode: int, priority_id: String = "") -> void:
+	targeting_mode = mode
+	priority_id_for_mode = priority_id
+
+
+## Target chosen by targeting_mode among the enemies in range, or null.
+func select_target(enemies: Array) -> Enemy:
+	return Targeting.select(targeting_mode, enemies, global_position, definition.attack_range, priority_id_for_mode)
+
+
+## Kept for existing callers and tests. Equals select_target; the default mode is CLOSEST.
 func closest_in_range(enemies: Array) -> Enemy:
-	var best: Enemy = null
-	var best_distance: float = definition.attack_range
-	for candidate: Variant in enemies:
-		var enemy: Enemy = candidate
-		if not is_instance_valid(enemy) or not enemy.alive:
-			continue
-		var distance: float = global_position.distance_to(enemy.global_position)
-		if distance <= best_distance:
-			best = enemy
-			best_distance = distance
-	return best
+	return select_target(enemies)
 
 
 func take_damage(amount: float) -> void:
