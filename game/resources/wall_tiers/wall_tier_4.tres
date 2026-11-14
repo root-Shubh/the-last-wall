@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="WallTier" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/wall_tier.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+tier = 4
+display_name = "Reinforced Stone Wall"
+max_health = 300
+armour = 2.5
+repair_per_second = 1.25
+colour = Color(0.45, 0.5, 0.58, 1)
+upgrade_cost = 150

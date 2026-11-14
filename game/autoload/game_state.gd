@@ -25,6 +25,9 @@ var current_wave: int = 0
 var production_levels: Dictionary = {}
 var wall_max_health: int = DEFAULT_WALL_MAX_HEALTH
 var wall_health: int = DEFAULT_WALL_MAX_HEALTH
+## Current wall tier 1 to MAX_WALL_TIER (SVTLW-63). Set by WallTierManager.
+const MAX_WALL_TIER: int = 7
+var wall_tier: int = 1
 
 ## Cosmetic and narrative only (SVTLW-42). Both characters play identically.
 const CHARACTER_IDS: Array[String] = ["male", "female"]
@@ -45,6 +48,7 @@ func reset() -> void:
 	production_levels.clear()
 	wall_max_health = DEFAULT_WALL_MAX_HEALTH
 	wall_health = wall_max_health
+	wall_tier = 1
 	character_id = ""
 	character_name = ""
 	flags.clear()
@@ -196,6 +200,7 @@ func to_dict() -> Dictionary:
 		"character_name": character_name,
 		"flags": flags.duplicate(),
 		"production": production_levels.duplicate(),
+		"wall_tier": wall_tier,
 	}
 
 
@@ -238,7 +243,14 @@ func from_dict(data: Dictionary) -> bool:
 			if typeof(key) == TYPE_STRING and _is_non_negative_whole(level) and int(level) >= 1:
 				new_production[key] = int(level)
 
+	# Wall tier (SVTLW-63) is optional so saves from before the tier story load as tier 1.
+	var new_tier: int = 1
+	var raw_tier: Variant = data.get("wall_tier", 1)
+	if _is_non_negative_whole(raw_tier) and int(raw_tier) >= 1:
+		new_tier = mini(int(raw_tier), MAX_WALL_TIER)
+
 	gold = int(data["gold"])
+	wall_tier = new_tier
 	production_levels = new_production
 	wood = new_materials["wood"]
 	stone = new_materials["stone"]

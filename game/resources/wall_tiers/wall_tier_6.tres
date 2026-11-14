@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="WallTier" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/wall_tier.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+tier = 6
+display_name = "Ancient Fortress"
+max_health = 520
+armour = 3.5
+repair_per_second = 1.75
+colour = Color(0.5, 0.35, 0.55, 1)
+upgrade_cost = 400
