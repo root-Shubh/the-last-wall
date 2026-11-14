@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="EnemyDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/enemy_definition.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+enemy_id = "climber"
+display_name = "Climber"
+role = "climber"
+max_health = 12.0
+armour = 0.0
+move_speed = 45.0
+wall_damage = 3.0
+attack_interval_ticks = 8
+gold_reward = 3
+bypass_wall_armour = true
+melee_counter_only = true

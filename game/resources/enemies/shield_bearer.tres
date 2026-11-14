@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="EnemyDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/enemy_definition.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+enemy_id = "shield_bearer"
+display_name = "Shield Bearer"
+role = "shield_bearer"
+max_health = 30.0
+armour = 2.0
+move_speed = 20.0
+wall_damage = 4.0
+attack_interval_ticks = 12
+gold_reward = 4
+shield_radius = 90.0
+shield_fraction = 0.5
