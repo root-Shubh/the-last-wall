@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="PrestigePath" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/prestige_path.gd" id="1_path"]
+
+[resource]
+script = ExtResource("1_path")
+path_id = "scholar"
+display_name = "Scholar"
+bonus_stat = "research_speed"
+bonus_value = 0.1
+mechanic_text = "Every enemy killed yields research points."
+mechanic_event = "enemy_killed"
+mechanic_effects = {
+"research_points": 1
+}

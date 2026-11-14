@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="Achievement" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/achievement.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+achievement_id = "damage_1000000"
+display_name = "Engine of Ruin"
+description = "Deal 1000000 damage in total."
+stat = "damage_dealt"
+threshold = 1000000
