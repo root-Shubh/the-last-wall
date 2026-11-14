@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="OverlordDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/overlord_definition.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+overlord_id = "architect"
+display_name = "The Architect"
+max_health = 5000.0
+phase_thresholds = PackedFloat32Array(0.66, 0.33)
+special_attack_ids = PackedStringArray("blueprint_sweep", "rebuild_legion")
+narrative_intro = "The Architect drew the city before the war and still draws it. Its plans are redrawn across the field, and every wall it sketches is one more wall you must break."
+defeat_text = "The blueprint tears in half. The Architect's plans lose their hold on the field. Your archers have learned the angles of its designs and aim truer."
+permanent_reward_key = "archer_damage_bonus_5"

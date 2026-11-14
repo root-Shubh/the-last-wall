@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ResearchDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/research_definition.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+research_id = "sim_infinite_recursion"
+display_name = "Infinite Recursion"
+branch = "Simulation Exploitation"
+prerequisites = PackedStringArray("sim_memory_corruption")
+effect_key = "infinite_recursion_bonus"
+effect_value = 0.20
+cost_rp = 5

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ResearchDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/research_definition.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+research_id = "sim_parallel_combat"
+display_name = "Parallel Combat"
+branch = "Simulation Exploitation"
+prerequisites = PackedStringArray("sim_unbounded_multipliers")
+effect_key = "parallel_combat_bonus"
+effect_value = 0.10
+cost_rp = 3

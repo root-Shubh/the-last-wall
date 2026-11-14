@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="OverlordDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/overlord_definition.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+overlord_id = "devourer"
+display_name = "The Devourer"
+max_health = 7000.0
+phase_thresholds = PackedFloat32Array(0.7, 0.4, 0.15)
+special_attack_ids = PackedStringArray("maw_swallow", "hunger_wave", "feeding_frenzy")
+narrative_intro = "The Devourer does not stop to fight. It eats the land it crosses, and the ground behind it is bare. It has smelled your fortress."
+defeat_text = "The Devourer chokes on the last of the fields it took. Its hunger breaks, and the gold your people salvage from the scraps is yours to keep."
+permanent_reward_key = "gold_per_kill_bonus_10"

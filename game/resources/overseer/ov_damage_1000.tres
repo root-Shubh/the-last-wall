@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="OverseerMessage" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/overseer_message.gd" id="1_msg"]
+
+[resource]
+script = ExtResource("1_msg")
+message_id = "ov_damage_1000"
+text = "One thousand damage dealt. The enemy is noticing you."
+trigger_kind = "damage_dealt_total"
+trigger_value = 1000

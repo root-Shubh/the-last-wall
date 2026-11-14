@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="EnemyDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/enemy_definition.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+enemy_id = "guardian"
+display_name = "Guardian"
+role = "shield_bearer"
+faction = "ancient_horde"
+max_health = 45.0
+armour = 4.0
+move_speed = 16.0
+wall_damage = 5.0
+attack_interval_ticks = 14
+gold_reward = 6
+shield_radius = 110.0
+shield_fraction = 0.4

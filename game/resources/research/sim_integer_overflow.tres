@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ResearchDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/research_definition.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+research_id = "sim_integer_overflow"
+display_name = "Integer Overflow"
+branch = "Simulation Exploitation"
+prerequisites = PackedStringArray()
+effect_key = "overflow_damage_cap"
+effect_value = 0.10
+cost_rp = 1

@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="EnemyDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/enemy_definition.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+enemy_id = "ancient_construct"
+display_name = "Ancient Construct"
+role = "wall_breaker"
+faction = "ancient_horde"
+max_health = 60.0
+armour = 6.0
+move_speed = 12.0
+wall_damage = 18.0
+attack_interval_ticks = 18
+gold_reward = 7
+resource_reward_type = "iron"
+resource_reward_amount = 1
