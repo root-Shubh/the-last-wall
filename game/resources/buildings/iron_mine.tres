@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="BuildingDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/building_definition.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+building_id = "iron_mine"
+display_name = "Iron Mine"
+build_cost = 90
+wood_cost = 20
+build_time_ticks = 60
+max_level = 3
+required_slot = -1
+production_resource = "iron"
+production_per_interval = 5
+production_interval_ticks = 10
+exposure_chance_per_interval = 0.3

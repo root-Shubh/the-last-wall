@@ -10,6 +10,7 @@ var _gold_label: Label
 var _wood_label: Label
 var _stone_label: Label
 var _iron_label: Label
+var _production_label: Label
 var _research_label: Label
 var _wave_label: Label
 var _wall_label: Label
@@ -33,6 +34,7 @@ func build() -> void:
 	_wood_label = _label(bar, "Wood 0")
 	_stone_label = _label(bar, "Stone 0")
 	_iron_label = _label(bar, "Iron 0")
+	_production_label = _label(bar, "Prod W 0.0 S 0.0 I 0.0")
 	_research_label = _label(bar, "Research %s" % PLACEHOLDER)
 	_wave_label = _label(bar, "Wave 0")
 	_wall_label = _label(bar, "Wall --")
@@ -64,6 +66,18 @@ func bind(game_state: Node, clock: SimulationClock, waves: WaveManager, wall: Wa
 	_iron_label.text = "Iron %d" % game_state.iron
 	_wall_label.text = "Wall %d / %d" % [game_state.wall_health, game_state.wall_max_health]
 	_refresh_speed()
+
+
+## Connects the per-tick production readout (SVTLW-55). Call after build() or let this call it.
+func bind_production(manager: ProductionManager) -> void:
+	build()
+	manager.rates_changed.connect(show_production)
+	show_production(manager.production_per_tick_for("wood"), manager.production_per_tick_for("stone"), manager.production_per_tick_for("iron"))
+
+
+func show_production(wood_rate: float, stone_rate: float, iron_rate: float) -> void:
+	build()
+	_production_label.text = "Prod W %.1f S %.1f I %.1f" % [wood_rate, stone_rate, iron_rate]
 
 
 func set_speed(value: int) -> void:
