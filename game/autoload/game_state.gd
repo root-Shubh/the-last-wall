@@ -36,6 +36,8 @@ var character_id: String = ""
 var character_name: String = ""
 ## Story flags such as intro_seen (SVTLW-41). Values are booleans.
 var flags: Dictionary = {}
+## Research save data (SVTLW-61): {"points": int, "researched": Array of ids}. Written by ResearchManager.
+var research: Dictionary = {}
 
 
 ## Restores every value to a new game.
@@ -52,6 +54,7 @@ func reset() -> void:
 	character_id = ""
 	character_name = ""
 	flags.clear()
+	research = {}
 	resources_changed.emit(gold)
 	_emit_materials()
 	wave_changed.emit(current_wave)
@@ -201,6 +204,7 @@ func to_dict() -> Dictionary:
 		"flags": flags.duplicate(),
 		"production": production_levels.duplicate(),
 		"wall_tier": wall_tier,
+		"research": research.duplicate(true),
 	}
 
 
@@ -249,8 +253,22 @@ func from_dict(data: Dictionary) -> bool:
 	if _is_non_negative_whole(raw_tier) and int(raw_tier) >= 1:
 		new_tier = mini(int(raw_tier), MAX_WALL_TIER)
 
+	# Research (SVTLW-61) is optional so saves from before the research story load with zero points.
+	var new_research: Dictionary = {"points": 0, "researched": []}
+	var raw_research: Variant = data.get("research", {})
+	if typeof(raw_research) == TYPE_DICTIONARY:
+		var points: Variant = raw_research.get("points", 0)
+		if _is_non_negative_whole(points):
+			new_research["points"] = int(points)
+		var ids: Variant = raw_research.get("researched", [])
+		if typeof(ids) == TYPE_ARRAY:
+			for id: Variant in ids:
+				if typeof(id) == TYPE_STRING and not new_research["researched"].has(id):
+					new_research["researched"].append(id)
+
 	gold = int(data["gold"])
 	wall_tier = new_tier
+	research = new_research
 	production_levels = new_production
 	wood = new_materials["wood"]
 	stone = new_materials["stone"]
