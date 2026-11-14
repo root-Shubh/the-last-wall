@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="EnemyDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/enemy_definition.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+enemy_id = "undead_infantry"
+display_name = "Undead Infantry"
+role = "pressure"
+max_health = 10.0
+armour = 0.0
+move_speed = 30.0
+wall_damage = 3.0
+attack_interval_ticks = 10
