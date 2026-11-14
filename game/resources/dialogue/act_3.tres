@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="DialogueSequence" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://resources/dialogue_sequence.gd" id="1_seq"]
+[ext_resource type="Script" path="res://resources/dialogue_line.gd" id="2_line"]
+
+[sub_resource type="Resource" id="l1"]
+script = ExtResource("2_line")
+speaker = "OVERSEER"
+text = "I am not your commander. I am the system that watches you."
+
+[sub_resource type="Resource" id="l2"]
+script = ExtResource("2_line")
+speaker = "OVERSEER"
+text = "You are the experiment. Every death was a result I recorded."
+
+[sub_resource type="Resource" id="l3"]
+script = ExtResource("2_line")
+speaker = "SYSTEM"
+text = "ACT III: THE TRUTH."
+duration_seconds = 2.0
+
+[resource]
+script = ExtResource("1_seq")
+sequence_id = "act_3"
+lines = Array[ExtResource("2_line")]([SubResource("l1"), SubResource("l2"), SubResource("l3")])

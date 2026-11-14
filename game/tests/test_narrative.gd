@@ -9,6 +9,9 @@ func _initialize() -> void:
 	_test_messages_fire_once()
 	_test_no_fire_below_threshold()
 	_test_overseer_files_load()
+	_test_act_2_unlocks_and_saves()
+	_test_act_3_requires_act_2()
+	_test_act_effects_and_dialogue()
 	print("RESULT: %s (%d failure(s))" % ["PASS" if _failures == 0 else "FAIL", _failures])
 	quit(0 if _failures == 0 else 1)
 
@@ -80,3 +83,42 @@ func _test_overseer_files_load() -> void:
 		ids[message.message_id] = true
 	_check(all_have_text, "every overseer message has an id and text")
 	_check(ids.size() == messages.size(), "overseer message ids are unique")
+
+
+func _test_act_2_unlocks_and_saves() -> void:
+	print("act 2 unlocks at its trigger and saves as a flag")
+	var state: Node = _state()
+	var progress: NarrativeProgress = NarrativeProgress.new(state)
+	_check(progress.try_advance({"wave": 19}) == 0 and progress.current_act() == 1, "act 2 stays locked below wave 20")
+	_check(progress.try_advance({"wave": 20}) == 2 and progress.current_act() == 2, "act 2 unlocks at wave 20")
+	_check(state.has_flag("act_unlocked_2"), "act 2 is saved as a flag")
+	var restored: Node = _state()
+	restored.from_dict(state.to_dict())
+	_check(NarrativeProgress.new(restored).current_act() == 2, "act 2 survives a save and load")
+	state.free()
+	restored.free()
+
+
+func _test_act_3_requires_act_2() -> void:
+	print("act 3 requires act 2")
+	var state: Node = _state()
+	var progress: NarrativeProgress = NarrativeProgress.new(state)
+	_check(progress.try_advance({"deaths": 60, "wave": 5}) == 0, "act 3 does not unlock before act 2")
+	_check(not state.has_flag("act_unlocked_3"), "no act 3 flag without act 2")
+	progress.try_advance({"wave": 20})
+	_check(progress.try_advance({"deaths": 50}) == 3 and progress.current_act() == 3, "act 3 unlocks after act 2 at 50 deaths")
+	state.free()
+
+
+func _test_act_effects_and_dialogue() -> void:
+	print("act effects and dialogue")
+	_check(NarrativeProgress.effects_for_act(1).is_empty(), "act 1 has no effect hooks")
+	var act_2: Dictionary = NarrativeProgress.effects_for_act(2)
+	_check(is_equal_approx(float(act_2["freeze_enemies_chance"]), 0.05) and act_2["glitch_counters"] == true, "act 2 lists freeze and glitch hooks")
+	_check(NarrativeProgress.effects_for_act(3).has("reveal_truth"), "act 3 lists the truth hook")
+	for act: int in [1, 2, 3]:
+		var sequence: DialogueSequence = load("res://resources/dialogue/act_%d.tres" % act)
+		var speakers_ok: bool = sequence != null and not sequence.lines.is_empty()
+		for line: DialogueLine in sequence.lines if sequence != null else []:
+			speakers_ok = speakers_ok and (line.speaker == "OVERSEER" or line.speaker == "SYSTEM")
+		_check(speakers_ok and sequence.sequence_id == "act_%d" % act, "act %d dialogue loads with OVERSEER or SYSTEM lines" % act)
