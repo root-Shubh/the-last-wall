@@ -75,7 +75,7 @@ offset_bottom = -180.0
 color = Color(0.7, 0.75, 0.6, 1)
 
 [node name="SpawnLane" type="Marker2D" parent="."]
-position = Vector2(960, 360)
+position = Vector2(960, 536)
 
 [node name="EnemySpawnMarker" type="ColorRect" parent="SpawnLane"]
 offset_left = -10.0

@@ -7,6 +7,8 @@ const BATTLEFIELD_SCENE: String = "res://scenes/battlefield.tscn"
 
 var menu: MainMenu = null
 var picker: CharacterSelect = null
+var options: OptionsScreen = null
+var credits: CreditsScreen = null
 var dialogue: DialogueManager = null
 var dialogue_box: DialogueBox = null
 var battlefield: Battlefield = null
@@ -49,6 +51,21 @@ func ensure_started() -> void:
 	menu.new_game_started.connect(_on_new_game_started)
 	menu.continue_requested.connect(_on_continue)
 	menu.exit_requested.connect(func() -> void: get_tree().quit())
+
+	options = OptionsScreen.new()
+	add_child(options)
+	options.build()
+	options.closed.connect(func() -> void: menu.visible = true)
+	menu.settings_requested.connect(func() -> void:
+		menu.visible = false
+		options.open(SettingsStore.new()))
+	credits = CreditsScreen.new()
+	add_child(credits)
+	credits.build()
+	credits.closed.connect(func() -> void: menu.visible = true)
+	menu.credits_requested.connect(func() -> void:
+		menu.visible = false
+		credits.open())
 
 	picker = CharacterSelect.new()
 	picker.game_state = state

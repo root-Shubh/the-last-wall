@@ -184,7 +184,7 @@ func recruit() -> Archer:
 	if field == null:
 		return null
 	var slot: int = field.units.archers.size()
-	return field.recruit_archer(Vector2(RECRUIT_START_X + RECRUIT_STEP_X * slot, RECRUIT_Y))
+	return field.recruit_archer(field.recruit_position(slot))
 
 
 func start_wave() -> bool:

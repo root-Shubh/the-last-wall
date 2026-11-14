@@ -82,3 +82,9 @@ func _draw_buildings() -> void:
 		var fraction: float = clampf(float(site["progress"]) / float(maxi(data.build_time_ticks, 1)), 0.0, 1.0)
 		draw_rect(Rect2(rect.position.x, rect.end.y + 3.0, SLOT_SIZE, 4.0), Color(0.15, 0.15, 0.15))
 		draw_rect(Rect2(rect.position.x, rect.end.y + 3.0, SLOT_SIZE * fraction, 4.0), Color(0.95, 0.8, 0.3))
+
+
+## Height of the top of the wall for the current tier. Archers stand on this line.
+func wall_top_y() -> float:
+	var tier: int = clampi(int(field.game_state.wall_tier), 1, 7)
+	return GROUND_Y - (FLOOR_BASE + FLOOR_STEP * float(tier - 1))

@@ -268,6 +268,13 @@ func set_challenge_mode(on: bool) -> void:
 	_apply_upgrade_effects()
 
 
+## Where a recruit stands on the wall top: spaced along the wall, feet on the top line.
+func recruit_position(slot: int) -> Vector2:
+	if view == null:
+		return SLOT_POSITIONS[0]
+	return Vector2(BattleView.WALL_LEFT + 22.0 + 24.0 * float(slot % 4), view.wall_top_y() + 2.0)
+
+
 ## Active abilities (SVTLW-64). Returns false when locked, on cooldown or refused.
 func use_ability(ability_id: String) -> bool:
 	ensure_ready()
@@ -282,7 +289,7 @@ func use_ability(ability_id: String) -> bool:
 			game_state.repair_wall(REPAIR_AMOUNT)
 		Abilities.REINFORCEMENT:
 			for i: int in range(REINFORCEMENT_COUNT):
-				recruit_archer(SLOT_POSITIONS[0] + Vector2(20.0 * i, 0.0))
+				recruit_archer(recruit_position(i))
 		Abilities.LAST_STAND:
 			_last_stand_until = _tick_index + Abilities.LAST_STAND_TICKS
 	_sound("ability")
@@ -688,9 +695,12 @@ func restore_from_save() -> bool:
 	for key: Variant in levels:
 		upgrades.levels[str(key)] = int(levels[key])
 	upgrades.effects_changed.emit()
+	# Archers stand on the wall top now, so saved positions from older versions are not used.
+	var archer_count: int = 0
 	for entry: Variant in saved.get("archers", []):
 		if typeof(entry) == TYPE_ARRAY and entry.size() == 2:
-			units.restore_unit("archer", Vector2(float(entry[0]), float(entry[1])))
+			units.restore_unit("archer", recruit_position(archer_count))
+			archer_count += 1
 	# Finished buildings come back on their slots first, so defence structures and production exist (save restore gap).
 	for entry: Variant in saved.get("buildings", []):
 		if typeof(entry) == TYPE_DICTIONARY:
