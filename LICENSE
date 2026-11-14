@@ -1,3 +1,29 @@
 Copyright (c) 2026 root-Shubh. All rights reserved.
 
-This repository is private development material. No licence to use, copy, modify or distribute is granted until the owner publishes a licence.
+TERMS OF USE
+
+1. Ownership. "The Last Wall", including its source code, game design documents,
+   art, audio, text and other materials (the "Work"), is owned by root-Shubh. All
+   rights are reserved.
+
+2. Permitted use. You may view the Work in this repository. You may not use it
+   for any other purpose unless the copyright holder gives you written permission.
+
+3. Restrictions. Without prior written permission you may not:
+   a) copy, reproduce, distribute, publish or sell the Work, in whole or in part;
+   b) modify, adapt or create derivative works from it;
+   c) use the Work, its name or its art to create a competing product or service;
+   d) remove or change copyright or licence notices.
+
+4. Contributions. Changes contributed to this repository become the property of
+   the copyright holder, who may use them in the Work.
+
+5. Third-party assets. Assets listed in assets/CREDITS.md keep the licences stated
+   there. Those licences apply to those assets.
+
+6. No warranty. The Work is provided "as is", without warranty of any kind. The
+   copyright holder is not liable for any claim or damages arising from it.
+
+7. Termination. Any breach of these terms ends any permission you have been given.
+
+To request permission for another use, open an issue in this repository.
