@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ResearchDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/research_definition.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+research_id = "arc_weakening"
+display_name = "Enemy Weakening"
+branch = "Arcane"
+cost_rp = 30
+prerequisites = PackedStringArray("arc_fire_arrows")
+exclusive_with = PackedStringArray()
+effect_key = "enemy_damage_taken_bonus"
+effect_value = 0.1
