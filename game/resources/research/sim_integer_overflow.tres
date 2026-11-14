@@ -6,8 +6,8 @@
 script = ExtResource("1_def")
 research_id = "sim_integer_overflow"
 display_name = "Integer Overflow"
-branch = "simulation_exploitation"
-prerequisite_id = ""
+branch = "Simulation Exploitation"
+prerequisites = PackedStringArray()
 effect_key = "overflow_damage_cap"
 effect_value = 0.10
-cost = 1
+cost_rp = 1

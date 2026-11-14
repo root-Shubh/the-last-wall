@@ -7,7 +7,7 @@ const BRANCHES: Array[String] = ["Military", "Engineering", "Economy", "Arcane",
 
 @export var research_id: String = ""
 @export var display_name: String = ""
-@export_enum("Military", "Engineering", "Economy", "Arcane", "Logistics") var branch: String = "Military"
+@export_enum("Military", "Engineering", "Economy", "Arcane", "Logistics", "Simulation Exploitation") var branch: String = "Military"
 @export var cost_rp: int = 10
 ## Every id listed here must be researched before this node can be researched.
 @export var prerequisites: PackedStringArray = PackedStringArray()

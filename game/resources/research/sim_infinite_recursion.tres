@@ -6,8 +6,8 @@
 script = ExtResource("1_def")
 research_id = "sim_infinite_recursion"
 display_name = "Infinite Recursion"
-branch = "simulation_exploitation"
-prerequisite_id = "sim_memory_corruption"
+branch = "Simulation Exploitation"
+prerequisites = PackedStringArray("sim_memory_corruption")
 effect_key = "infinite_recursion_bonus"
 effect_value = 0.20
-cost = 5
+cost_rp = 5

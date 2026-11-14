@@ -6,8 +6,8 @@
 script = ExtResource("1_def")
 research_id = "sim_recursive_production"
 display_name = "Recursive Production"
-branch = "simulation_exploitation"
-prerequisite_id = "sim_integer_overflow"
+branch = "Simulation Exploitation"
+prerequisites = PackedStringArray("sim_integer_overflow")
 effect_key = "recursive_production_bonus"
 effect_value = 0.10
-cost = 2
+cost_rp = 2

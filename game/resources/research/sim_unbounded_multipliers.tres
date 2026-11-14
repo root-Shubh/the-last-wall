@@ -6,8 +6,8 @@
 script = ExtResource("1_def")
 research_id = "sim_unbounded_multipliers"
 display_name = "Unbounded Multipliers"
-branch = "simulation_exploitation"
-prerequisite_id = "sim_recursive_production"
+branch = "Simulation Exploitation"
+prerequisites = PackedStringArray("sim_recursive_production")
 effect_key = "unbounded_multiplier_bonus"
 effect_value = 0.05
-cost = 2
+cost_rp = 2

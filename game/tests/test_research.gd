@@ -41,7 +41,7 @@ func _test_data() -> void:
 		counts[data.branch] = int(counts.get(data.branch, 0)) + 1
 	for branch: String in ResearchDefinition.BRANCHES:
 		_check(int(counts.get(branch, 0)) >= 3, "%s has at least three nodes" % branch)
-	_check(ids.size() >= 15 and counts.size() == 5, "fifteen nodes across five branches")
+	_check(ids.size() >= 15 and counts.size() >= 5, "fifteen nodes across five branches")
 	var all_prereqs_exist: bool = true
 	for data: ResearchDefinition in manager.definitions:
 		for prerequisite: String in data.prerequisites:

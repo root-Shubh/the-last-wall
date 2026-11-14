@@ -6,8 +6,8 @@
 script = ExtResource("1_def")
 research_id = "sim_reality_desync"
 display_name = "Reality Desync"
-branch = "simulation_exploitation"
-prerequisite_id = "sim_parallel_combat"
+branch = "Simulation Exploitation"
+prerequisites = PackedStringArray("sim_parallel_combat")
 effect_key = "reality_desync_vs_machines"
 effect_value = 0.15
-cost = 3
+cost_rp = 3
