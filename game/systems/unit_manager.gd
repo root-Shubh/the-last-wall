@@ -64,6 +64,11 @@ func can_recruit(unit_id: String) -> bool:
 	return _recruit_error(unit_id) == ""
 
 
+## Empty string when unit_id can be recruited now, otherwise the reason (public wrapper for UI, SVTLW-52).
+func recruit_block_reason(unit_id: String) -> String:
+	return _recruit_error(unit_id)
+
+
 ## Returns the new unit, or null if recruiting is refused. Reasons are reported by _recruit_error.
 func recruit(unit_id: String, at: Vector2) -> Archer:
 	var reason: String = _recruit_error(unit_id)
