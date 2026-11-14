@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="EnemyDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/enemy_definition.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+enemy_id = "process_terminator"
+display_name = "Process Terminator"
+role = "process_terminator"
+max_health = 20.0
+armour = 1.0
+move_speed = 35.0
+wall_damage = 6.0
+attack_interval_ticks = 9
+gold_reward = 4
+melee_counter_only = true

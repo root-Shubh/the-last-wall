@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ResearchDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/research_definition.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+research_id = "mil_volley_drill"
+display_name = "Volley Drill"
+branch = "Military"
+cost_rp = 10
+prerequisites = PackedStringArray()
+exclusive_with = PackedStringArray("mil_sharpened_arrows")
+effect_key = "archer_attack_speed_bonus"
+effect_value = 0.1

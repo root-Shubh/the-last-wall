@@ -51,6 +51,19 @@ Each later milestone gets its tasks broken down when it starts, not before. Stor
 | M7 Production quality | SVTLW-86 to SVTLW-91 |
 | M8 Release candidate | SVTLW-92 to SVTLW-97 |
 
+## Release checklist
+
+Run through this list for every release candidate (M8 onwards). Tick each box with the evidence in the release notes.
+
+- [ ] Build exports on a clean machine: `tools/build_windows.ps1` produces `build/TheLastWall.exe`, and it runs with no Godot install present.
+- [ ] All test suites pass on Windows, Linux and macOS (`tools/run_tests.sh` in CI).
+- [ ] Save migrations pass: every older save version loads and upgrades without loss.
+- [ ] Performance numbers recorded in `docs/PERFORMANCE.md` at 100, 250, 500 and 1000 enemies.
+- [ ] Steam flag off by default: the Steam feature is disabled in the default build settings.
+- [ ] Credits and licences complete: every asset is listed in `assets/CREDITS.md` with source and licence.
+- [ ] Version bumped: `config/version` in `game/project.godot` matches the release tag.
+- [ ] Changelog compiled from `changelog.d/`: fragments are moved into `CHANGELOG.md` and the fragments are removed.
+
 ## Process per ticket
 
 1. Branch `feature-SVTLW-<n>` from `develop`.
