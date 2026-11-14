@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SpecialisationDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/specialisation_definition.gd" id="1_spec"]
+
+[resource]
+script = ExtResource("1_spec")
+specialisation_id = "siege_hunter"
+display_name = "Siege hunter"
+unit_id = "crossbowman"
+damage_multiplier = 1.6
+attack_speed_multiplier = 0.6
+range_multiplier = 1.0
+armour_penetration_bonus = 0.0
+weakness = "Built for heavy armour. Its slow fire makes it weak against light targets. The heavy-armour condition is not enforced in data yet."
+damage_type_note = ""

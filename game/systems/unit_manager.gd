@@ -49,8 +49,18 @@ func set_archer_multipliers(damage: float, speed: float) -> void:
 	archer_damage_multiplier = damage
 	archer_speed_multiplier = speed
 	for archer: Archer in archers:
-		archer.damage_multiplier = damage
-		archer.attack_speed_multiplier = speed
+		archer.set_upgrade_multipliers(damage, speed)
+
+
+## Gives one archer a specialisation (SVTLW-62). Returns false, and changes nothing, if unit is null,
+## the id is unknown, the unit type does not match, or the archer already has a specialisation.
+func set_specialisation(unit: Archer, specialisation_id: String) -> bool:
+	if unit == null:
+		return false
+	var spec: SpecialisationDefinition = SpecialisationDefinition.load_by_id(specialisation_id)
+	if spec == null:
+		return false
+	return unit.apply_specialisation(spec)
 
 
 func population_used() -> int:
@@ -97,8 +107,7 @@ func _spawn(definition: UnitDefinition, at: Vector2) -> Archer:
 	var archer: Archer = Archer.new()
 	add_child(archer)
 	archer.setup(definition, at, _rng)
-	archer.damage_multiplier = archer_damage_multiplier
-	archer.attack_speed_multiplier = archer_speed_multiplier
+	archer.set_upgrade_multipliers(archer_damage_multiplier, archer_speed_multiplier)
 	archer.set_targeting_mode(default_targeting_mode, default_priority_id)
 	archer.died.connect(_on_archer_died)
 	archers.append(archer)

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SpecialisationDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/specialisation_definition.gd" id="1_spec"]
+
+[resource]
+script = ExtResource("1_spec")
+specialisation_id = "longbow"
+display_name = "Longbow"
+unit_id = "archer"
+damage_multiplier = 1.0
+attack_speed_multiplier = 0.75
+range_multiplier = 1.5
+armour_penetration_bonus = 0.0
+weakness = "Fires 25 percent slower, so it falls behind in swarms."
+damage_type_note = ""
