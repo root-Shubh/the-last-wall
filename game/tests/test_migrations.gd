@@ -124,10 +124,11 @@ func _test_round_trip(state: Node, saves: Node) -> void:
 	state.reset()
 	_check(saves.load_game(), "save_game output loads back")
 	var after: Dictionary = state.to_dict()
+	var differing: String = ""
 	for key: Variant in before:
 		if before[key] != after.get(key):
-			print("        differs: %s before=%s after=%s" % [key, var_to_str(before[key]), var_to_str(after.get(key))])
-	_check(after == before, "loaded state equals the saved state")
+			differing += " [%s before=%s after=%s]" % [key, var_to_str(before[key]), var_to_str(after.get(key))]
+	_check(after == before, "loaded state equals the saved state; keys before=%d after=%d differing:%s" % [before.size(), after.size(), differing if differing != "" else " none"])
 	_check(saves.last_extra.get("battlefield", {}).get("tick", -1) == 9, "extra data round trips")
 	_remove_save()
 
