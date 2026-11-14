@@ -86,6 +86,25 @@ func on_tick(_tick_index: int) -> void:
 			construction_completed.emit(building_id, slot)
 
 
+## Puts back a finished building from a save, with no cost and no build time (save restore gap).
+## Refuses a slot that is taken, or a building already placed.
+func restore_completed(building_id: String, slot: int) -> bool:
+	if definition(building_id) == null or not is_slot_free(slot) or _completed.has(building_id):
+		return false
+	_completed[building_id] = slot
+	_slot_owner[slot] = building_id
+	construction_completed.emit(building_id, slot)
+	return true
+
+
+## Finished buildings as [{"building_id", "slot"}] for saving.
+func completed_list() -> Array:
+	var out: Array = []
+	for building_id: String in _completed:
+		out.append({"building_id": building_id, "slot": int(_completed[building_id])})
+	return out
+
+
 func is_slot_free(slot: int) -> bool:
 	return slot >= 0 and not _slot_owner.has(slot)
 
