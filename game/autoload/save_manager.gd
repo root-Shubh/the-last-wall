@@ -11,12 +11,17 @@ signal save_completed(success: bool)
 signal load_completed(success: bool)
 
 
+## Extra data read from the last successful load, for example battlefield state (SVTLW-44).
+var last_extra: Dictionary = {}
+
+
 ## Writes the save to a temporary file, then renames it over the real save.
-## A failed write never replaces a previously valid save.
-func save_game() -> bool:
+## A failed write never replaces a previously valid save. extra is stored under "extra".
+func save_game(extra: Dictionary = {}) -> bool:
 	var payload: Dictionary = {
 		"schema_version": SAVE_VERSION,
 		"state": GameState.to_dict(),
+		"extra": extra,
 	}
 	var text: String = JSON.stringify(payload, "\t")
 
@@ -93,5 +98,7 @@ func load_game() -> bool:
 	var success: bool = GameState.from_dict(payload["state"])
 	if not success:
 		push_warning("SaveManager: save state failed validation; keeping current state")
+	else:
+		last_extra = payload["extra"] if typeof(payload.get("extra")) == TYPE_DICTIONARY else {}
 	load_completed.emit(success)
 	return success

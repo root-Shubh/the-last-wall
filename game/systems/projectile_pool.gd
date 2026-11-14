@@ -10,9 +10,19 @@ signal projectile_hit(target: Enemy, damage: float)
 var _idle: Array[Projectile] = []
 var _active: Array[Projectile] = []
 var total_created: int = 0
+var _warmed: bool = false
 
 
 func _ready() -> void:
+	_warm()
+
+
+## Creates the pool's projectiles once. Runs from _ready and on first use, because _ready is not
+## guaranteed to run for nodes added during a SceneTree script.
+func _warm() -> void:
+	if _warmed:
+		return
+	_warmed = true
 	for i: int in range(initial_size):
 		_create()
 
@@ -21,6 +31,7 @@ func _ready() -> void:
 func fire(origin: Vector2, target: Enemy, damage: float) -> Projectile:
 	if target == null:
 		return null
+	_warm()
 	if _idle.is_empty():
 		push_warning("ProjectilePool: grew beyond initial size (%d)" % initial_size)
 		_create()
