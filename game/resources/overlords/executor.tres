@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="OverlordDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/overlord_definition.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+overlord_id = "executor"
+display_name = "The Executor"
+max_health = 6000.0
+phase_thresholds = PackedFloat32Array(0.5)
+special_attack_ids = PackedStringArray("execution_order", "headsman_strike")
+narrative_intro = "The Executor carries the sentences of the old courts. It reads your name from a list and marches toward the wall to carry out the order."
+defeat_text = "The Executor's sentence is overturned. Its ledger burns, and the repair crews on your wall work faster for it."
+permanent_reward_key = "wall_repair_rate_bonus_10"

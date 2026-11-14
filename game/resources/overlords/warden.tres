@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="OverlordDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/overlord_definition.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+overlord_id = "warden"
+display_name = "The Warden"
+max_health = 5500.0
+phase_thresholds = PackedFloat32Array(0.75, 0.5, 0.25)
+special_attack_ids = PackedStringArray("cell_lockdown", "sentry_volley")
+narrative_intro = "The Warden keeps the prisons of the old world and every lock it ever set. It locks the road ahead of you one gate at a time."
+defeat_text = "The last lock opens. The Warden's keys fall silent, and your archers reload faster in the quiet that follows."
+permanent_reward_key = "archer_attack_speed_bonus_5"
