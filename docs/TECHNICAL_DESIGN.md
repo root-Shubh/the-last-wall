@@ -68,3 +68,11 @@ Benchmark scenes at 100, 250, 500 and 1000 active enemies. Results and the minim
 ## Offline progression (later)
 
 The game stores a timestamp on close. On launch it applies passive production for the elapsed time, up to a configurable cap. Battles are not simulated offline.
+
+## Save slots (deferred)
+
+M1 to M7 use one save slot. The file is `user://save_slot_1.json` (with `.tmp` and `.bak` beside it), and `SaveManager` reads and writes only that path. The file name for slot 1 must not change, so existing saves keep loading.
+
+Multiple slots are deferred. They need a slot id in every path, a slot picker in the menus and a rule for which slot autosave writes to. That is not a small change, so SVTLW-93 adds no `slot` helper. When slots arrive, slot 1 keeps the current file name, and `game/tests/test_migrations.gd` must still pass.
+
+Schema migrations: only schema version 1 exists. `SaveManager.load_game` rejects any other version and keeps the current state. The v1 fixture in `game/tests/fixtures/` is the oldest save covered, because no older schema was ever shipped.
