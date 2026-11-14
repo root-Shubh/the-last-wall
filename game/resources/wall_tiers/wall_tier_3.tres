@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="WallTier" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/wall_tier.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+tier = 3
+display_name = "Stone Fortification"
+max_health = 220
+armour = 2.0
+repair_per_second = 1.0
+colour = Color(0.6, 0.6, 0.62, 1)
+upgrade_cost = 80
