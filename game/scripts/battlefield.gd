@@ -25,7 +25,7 @@ var production: ProductionManager
 var effects: EffectPool
 var context_panel: ContextPanel
 ## Fixed build slots on the fortress, indexed by slot number (SVTLW-100).
-const SLOT_POSITIONS: Array[Vector2] = [Vector2(130.0, 170.0), Vector2(130.0, 540.0), Vector2(60.0, 360.0), Vector2(60.0, 250.0)]
+const SLOT_POSITIONS: Array[Vector2] = [Vector2(40.0, 540.0), Vector2(130.0, 592.0), Vector2(40.0, 470.0), Vector2(40.0, 400.0)]
 ## Gold per upgrade level: upgrading from level n costs UPGRADE_GOLD_PER_LEVEL * n.
 const UPGRADE_GOLD_PER_LEVEL: int = 25
 ## Radius of the explosion raised by a defence structure's shot.
@@ -280,6 +280,7 @@ func use_ability(ability_id: String) -> bool:
 	ensure_ready()
 	var researched: Array = game_state.research.get("researched", [])
 	if not abilities.use(ability_id, _tick_index, researched):
+		notice.emit(abilities.refusal_reason(ability_id, _tick_index, researched))
 		return false
 	match ability_id:
 		Abilities.RAIN_OF_ARROWS:

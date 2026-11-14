@@ -44,6 +44,7 @@ var ending_label: Label = null
 ## Line for Overseer messages, death lines and achievements.
 var message_label: Label = null
 var _prestige_panel: VBoxContainer = null
+var _prestige_holder: PanelContainer = null
 
 
 func bind(battlefield: Battlefield) -> void:
@@ -100,10 +101,20 @@ func build() -> void:
 
 ## Prestige, relic purchases and path choice (SVTLW-73, 74). Hidden until Prestige Menu is pressed.
 func _build_prestige_panel() -> void:
+	var holder: PanelContainer = PanelContainer.new()
+	holder.position = PRESTIGE_PANEL_POSITION
+	var style: StyleBoxFlat = StyleBoxFlat.new()
+	style.bg_color = Color(0.1, 0.11, 0.15, 0.97)
+	style.border_color = Color(0.45, 0.4, 0.3)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(4)
+	style.set_content_margin_all(8)
+	holder.add_theme_stylebox_override("panel", style)
+	holder.visible = false
+	_prestige_holder = holder
+	add_child(holder)
 	_prestige_panel = VBoxContainer.new()
-	_prestige_panel.position = PRESTIGE_PANEL_POSITION
-	_prestige_panel.visible = false
-	add_child(_prestige_panel)
+	holder.add_child(_prestige_panel)
 	_button(_prestige_panel, "Prestige now (resets the run)", func() -> void: prestige())
 	for relic_id: String in PRESTIGE_RELICS:
 		_button(_prestige_panel, "Buy relic: " + RELIC_LABELS[relic_id], func() -> void: buy_relic(relic_id))
@@ -112,8 +123,8 @@ func _build_prestige_panel() -> void:
 
 
 func toggle_prestige_panel() -> void:
-	if _prestige_panel != null:
-		_prestige_panel.visible = not _prestige_panel.visible
+	if _prestige_holder != null:
+		_prestige_holder.visible = not _prestige_holder.visible
 
 
 func upgrade_wall() -> bool:
@@ -199,7 +210,11 @@ func build_building(building_id: String) -> bool:
 
 
 func save() -> bool:
-	return field != null and field.save_now()
+	if field == null:
+		return false
+	var saved: bool = field.save_now()
+	show_message("Game saved" if saved else "Save failed. Check disk space and try again.")
+	return saved
 
 
 func _button(parent: Node, text: String, action: Callable) -> void:

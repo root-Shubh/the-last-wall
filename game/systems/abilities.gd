@@ -75,3 +75,16 @@ func from_dict(data: Dictionary) -> void:
 	for key: Variant in raw:
 		if typeof(key) == TYPE_STRING and DEFINITIONS.has(key) and (typeof(raw[key]) == TYPE_INT or typeof(raw[key]) == TYPE_FLOAT):
 			_ready_at[key] = int(raw[key])
+
+
+## Why an ability cannot be used right now, for the player. Empty string when it can be used.
+func refusal_reason(id: String, tick: int, researched: Array) -> String:
+	if not is_known(id):
+		return "Unknown ability"
+	if not is_unlocked(id, researched):
+		var needed: String = DEFINITIONS[id]["unlock_research"]
+		return "Locked: research %s first" % needed.replace("_", " ")
+	var remaining: int = cooldown_remaining(id, tick)
+	if remaining > 0:
+		return "Ready in %d seconds" % ceili(float(remaining) / 10.0)
+	return ""
