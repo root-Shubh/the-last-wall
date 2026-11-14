@@ -15,6 +15,8 @@ var _failures: int = 0
 func _initialize() -> void:
 	var state: Node = root.get_node("GameState")
 	var saves: Node = root.get_node("SaveManager")
+	# The suite writes the real save slot, so the player's save is kept aside and put back afterwards.
+	var kept: Dictionary = _keep_saves()
 	_remove_save()
 
 	_test_v1_fixture(state, saves)
@@ -22,6 +24,7 @@ func _initialize() -> void:
 	_test_round_trip(state, saves)
 	_test_balance_sim()
 	_remove_save()
+	_restore_saves(kept)
 
 	print("RESULT: %s (%d failure(s))" % ["PASS" if _failures == 0 else "FAIL", _failures])
 	quit(0 if _failures == 0 else 1)
@@ -33,6 +36,26 @@ func _check(condition: bool, label: String) -> void:
 	else:
 		_failures += 1
 		print("  FAIL - %s" % label)
+
+
+## Reads the save slot and its temp and backup files into memory, then removes them. Returns path -> bytes.
+func _keep_saves() -> Dictionary:
+	var kept: Dictionary = {}
+	for path: String in [SAVE_PATH, "user://save_slot_1.tmp", "user://save_slot_1.bak"]:
+		if FileAccess.file_exists(path):
+			var file: FileAccess = FileAccess.open(path, FileAccess.READ)
+			kept[path] = file.get_buffer(file.get_length())
+			file.close()
+	return kept
+
+
+## Puts back whatever _keep_saves took, so the real save is never lost to the test run.
+func _restore_saves(kept: Dictionary) -> void:
+	_remove_save()
+	for path: String in kept:
+		var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
+		file.store_buffer(kept[path])
+		file.close()
 
 
 ## Removes the save and the temp and backup files SaveManager leaves beside it, so no run starts from another run's leftovers.

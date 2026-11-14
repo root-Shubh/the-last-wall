@@ -60,3 +60,18 @@ func use(id: String, tick: int, researched: Array) -> bool:
 
 func reset() -> void:
 	_ready_at.clear()
+
+
+## Cooldown end ticks for saving.
+func to_dict() -> Dictionary:
+	return {"ready_at": _ready_at.duplicate()}
+
+
+func from_dict(data: Dictionary) -> void:
+	_ready_at = {}
+	var raw: Variant = data.get("ready_at", {})
+	if typeof(raw) != TYPE_DICTIONARY:
+		return
+	for key: Variant in raw:
+		if typeof(key) == TYPE_STRING and DEFINITIONS.has(key) and (typeof(raw[key]) == TYPE_INT or typeof(raw[key]) == TYPE_FLOAT):
+			_ready_at[key] = int(raw[key])

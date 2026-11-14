@@ -4,3 +4,9 @@
 - The Abomination boss with hide-reduced light hits, phases at health thresholds and a one-time reward (SVTLW-66).
 - Wave 1000 final Overseer battle with Overlord attacks and Overseer interventions that switch off defence slots (SVTLW-83).
 - Collapse and real-world ending sequence, played once after the final battle and recorded as the canonical ending (SVTLW-84).
+- Battle controls for every building, every ability, prestige, relic purchases, path choice and challenge mode. Overseer messages, achievements, death lines and region names show on screen (SVTLW-64, 73, 74, 77, 78, 79, 81).
+- Saves now hold finished buildings with their upgrades, ability cooldowns, objective progress, the boss and the final battle. Offline production is added on load (SVTLW-75).
+- Defence structures are drawn; left click selects archers, enemies and buildings for the context panel (SVTLW-52, 54).
+- Simulation Exploitation research effects apply in combat and economy (SVTLW-71). Region Overlords start at region end (SVTLW-82).
+- Generic balance defaults are recorded in docs/BALANCE.md (SVTLW-18).
+- The migration test keeps the player's real save and restores it afterwards (SVTLW-93).

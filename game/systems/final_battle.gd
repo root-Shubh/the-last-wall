@@ -83,3 +83,35 @@ func on_tick(slot_count: int) -> Array[String]:
 
 func slot_disabled(slot: int) -> bool:
 	return disabled_until.has(slot)
+
+
+func to_dict() -> Dictionary:
+	return {
+		"active": active,
+		"victory": victory,
+		"phase": phase,
+		"kills": kills,
+		"overlords_spawned": overlords_spawned,
+		"interventions": interventions,
+		"disabled_until": disabled_until.duplicate(),
+		"tick_count": _tick_count,
+		"last_overlord_tick": _last_overlord_tick,
+		"last_intervention_tick": _last_intervention_tick,
+	}
+
+
+func from_dict(data: Dictionary) -> void:
+	active = bool(data.get("active", false))
+	victory = bool(data.get("victory", false))
+	phase = clampi(int(data.get("phase", 0)), 0, PHASE_KILL_TARGETS.size())
+	kills = maxi(int(data.get("kills", 0)), 0)
+	overlords_spawned = maxi(int(data.get("overlords_spawned", 0)), 0)
+	interventions = maxi(int(data.get("interventions", 0)), 0)
+	disabled_until = {}
+	var raw: Variant = data.get("disabled_until", {})
+	if typeof(raw) == TYPE_DICTIONARY:
+		for key: Variant in raw:
+			disabled_until[int(key)] = int(raw[key])
+	_tick_count = maxi(int(data.get("tick_count", 0)), 0)
+	_last_overlord_tick = int(data.get("last_overlord_tick", 0))
+	_last_intervention_tick = int(data.get("last_intervention_tick", 0))

@@ -65,3 +65,21 @@ func claim_reward() -> int:
 
 func reward_claimed() -> bool:
 	return _reward_claimed
+
+
+func to_dict() -> Dictionary:
+	return {
+		"kills_of_target": kills_of_target,
+		"unit_losses": unit_losses,
+		"wall_held": wall_held,
+		"boss_defeated": boss_defeated,
+		"reward_claimed": _reward_claimed,
+	}
+
+
+func from_dict(data: Dictionary) -> void:
+	kills_of_target = maxi(int(data.get("kills_of_target", 0)), 0)
+	unit_losses = maxi(int(data.get("unit_losses", 0)), 0)
+	wall_held = bool(data.get("wall_held", true))
+	boss_defeated = bool(data.get("boss_defeated", false))
+	_reward_claimed = bool(data.get("reward_claimed", false))

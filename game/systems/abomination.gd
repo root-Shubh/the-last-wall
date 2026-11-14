@@ -52,3 +52,12 @@ func claim_reward(dead: bool) -> int:
 
 func reward_granted() -> bool:
 	return _reward_granted
+
+
+func to_dict() -> Dictionary:
+	return {"phase": phase, "reward_granted": _reward_granted}
+
+
+func from_dict(data: Dictionary) -> void:
+	phase = clampi(int(data.get("phase", 1)), 1, PHASE_THRESHOLDS.size() + 1)
+	_reward_granted = bool(data.get("reward_granted", false))

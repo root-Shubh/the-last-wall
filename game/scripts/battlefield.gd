@@ -39,6 +39,14 @@ var boss_phases: AbominationPhases = AbominationPhases.new()
 var final_battle: FinalBattle = FinalBattle.new()
 var ending: EndingSequence = EndingSequence.new()
 var _boss_enemy: Enemy = null
+## Stats, achievements, death lines, Overseer messages, narrative, endless siege, challenge and regions (SVTLW-78 to 85 wiring).
+var meta: BattleMeta = null
+## Overseer texts, unlocked achievement ids and death lines, emitted as they happen.
+signal overseer_message(text: String)
+signal achievement_unlocked(achievement_id: String)
+signal death_line(text: String)
+## Name of the region the current wave is in (SVTLW-81).
+signal region_entered(region_name: String)
 var _tick_index: int = 0
 var _last_stand_until: int = 0
 const RAIN_DAMAGE: float = 6.0
@@ -78,6 +86,7 @@ func ensure_ready() -> void:
 	damage_numbers.settings = settings
 	add_child(damage_numbers)
 	_build_systems()
+	_build_meta()
 	_connect_systems()
 	hud = TopBar.new()
 	add_child(hud)
@@ -158,12 +167,34 @@ func start_wave() -> bool:
 	# Wave 1000 is the final Overseer battle, not a normal wave (SVTLW-83).
 	if FinalBattle.is_final_wave(waves.current_wave + 1):
 		return final_battle.begin()
-	return waves.start_next_wave()
+	var started: bool = waves.start_next_wave()
+	if started:
+		var region: Region = meta.region_for_wave(waves.current_wave)
+		if region != null:
+			region_entered.emit(region.display_name)
+	return started
 
 
 func recruit_archer(at: Vector2) -> Archer:
 	ensure_ready()
+	if _challenge_restriction() == "no_archers":
+		return null
 	return units.recruit("archer", at)
+
+
+## The restriction of this week's challenge when challenge mode is on, else "" (SVTLW-77).
+func _challenge_restriction() -> String:
+	if meta == null or not game_state.has_flag("challenge_mode"):
+		return ""
+	var challenge: ChallengeDefinition = meta.current_challenge(int(Time.get_unix_time_from_system()))
+	return challenge.restriction if challenge != null else ""
+
+
+## Turns challenge mode on or off. The restriction applies from then on.
+func set_challenge_mode(on: bool) -> void:
+	ensure_ready()
+	game_state.set_flag("challenge_mode", on)
+	_apply_upgrade_effects()
 
 
 ## Active abilities (SVTLW-64). Returns false when locked, on cooldown or refused.
@@ -180,7 +211,7 @@ func use_ability(ability_id: String) -> bool:
 			game_state.repair_wall(REPAIR_AMOUNT)
 		Abilities.REINFORCEMENT:
 			for i: int in range(REINFORCEMENT_COUNT):
-				units.recruit("archer", SLOT_POSITIONS[0] + Vector2(20.0 * i, 0.0))
+				recruit_archer(SLOT_POSITIONS[0] + Vector2(20.0 * i, 0.0))
 		Abilities.LAST_STAND:
 			_last_stand_until = _tick_index + Abilities.LAST_STAND_TICKS
 	_sound("ability")
@@ -217,6 +248,19 @@ func step_ticks(count: int) -> void:
 	ensure_ready()
 	for i: int in range(count):
 		clock.advance(1.0 / SimulationClock.TICKS_PER_SECOND + 0.0001)
+
+
+## Builds the meta-game connections. Overseer messages load from resources/overseer (SVTLW-67, 68).
+func _build_meta() -> void:
+	var messages: Array[OverseerMessage] = []
+	var dir: DirAccess = DirAccess.open("res://resources/overseer")
+	if dir != null:
+		for file: String in dir.get_files():
+			if file.ends_with(".tres"):
+				var message: OverseerMessage = load("res://resources/overseer/" + file) as OverseerMessage
+				if message != null:
+					messages.append(message)
+	meta = BattleMeta.new(game_state, waves.generator, messages)
 
 
 func _build_systems() -> void:
@@ -306,12 +350,42 @@ func buy_upgrade(upgrade_id: String) -> bool:
 
 ## Pushes every upgrade total into the systems it changes (SVTLW-39).
 func _apply_upgrade_effects() -> void:
+	_apply_exploit_effects()
 	units.set_archer_multipliers(
-		1.0 + upgrades.effect_total("archer_damage"),
-		1.0 + upgrades.effect_total("archer_attack_speed"))
+		1.0 + upgrades.effect_total("archer_damage") + _exploit.get("parallel_combat_bonus", 0.0),
+		1.0 + upgrades.effect_total("archer_attack_speed") + _exploit.get("unbounded_multiplier_bonus", 0.0))
 	game_state.set_wall_max_health(BASE_WALL_MAX_HEALTH + roundi(upgrades.effect_total("wall_max_health")))
-	wall.repair_per_second = upgrades.effect_total("repair_rate")
 	rewards.kill_gold_bonus = roundi(upgrades.effect_total("gold_per_kill"))
+	_apply_challenge_restrictions()
+
+
+## Challenge restrictions, applied after the normal values (SVTLW-77).
+func _apply_challenge_restrictions() -> void:
+	match _challenge_restriction():
+		"no_repairs":
+			wall.repair_per_second = 0.0
+		"wall_max_health_half":
+			game_state.set_wall_max_health(maxi(BASE_WALL_MAX_HEALTH / 2, 1))
+
+
+## Simulation Exploitation research (SVTLW-71). Each effect key maps to one combat or economy effect.
+## The mapping is a proposal: the research text does not say where each effect applies. See docs/BALANCE.md.
+## overflow_damage_cap: raises the per-hit damage cap (40 base). recursive_production_bonus: offline gain multiplier.
+## unbounded_multiplier_bonus: archer attack speed. parallel_combat_bonus: archer damage.
+## infinite_recursion_bonus: extra wall repair per second. reality_desync_vs_machines: extra damage to every enemy.
+## memory_corruption_debuff: enemies deal less damage to the wall.
+var _exploit: Dictionary = {}
+const HIT_CAP_BASE: float = 40.0
+
+
+func _apply_exploit_effects() -> void:
+	if meta == null:
+		return
+	_exploit = {}
+	var totals: Dictionary = meta.exploit_totals(game_state.research.get("researched", []))
+	for key: Variant in totals:
+		_exploit[str(key)] = float(totals[key])
+	wall.repair_per_second = upgrades.effect_total("repair_rate") + _exploit.get("infinite_recursion_bonus", 0.0)
 
 
 func _connect_systems() -> void:
@@ -320,6 +394,8 @@ func _connect_systems() -> void:
 	waves.wave_completed.connect(_on_wave_completed)
 	enemies.enemy_removed.connect(func(_e: Enemy) -> void: waves.report_enemy_removed())
 	enemies.wall_attacked.connect(func(damage: float) -> void:
+		meta.on_damage_received(damage)
+		damage *= 1.0 - _exploit.get("memory_corruption_debuff", 0.0)
 		if not _last_stand_active():
 			wall.attack(damage)
 		_sound("wall_impact")
@@ -390,6 +466,7 @@ func _on_construction_completed(building_id: String, slot: int) -> void:
 
 ## Advances the final battle and the ending by one tick (SVTLW-83, SVTLW-84).
 func _on_final_battle_tick() -> void:
+	meta.on_tick(1.0 / SimulationClock.TICKS_PER_SECOND)
 	if final_battle.active:
 		for event: String in final_battle.on_tick(SLOT_POSITIONS.size()):
 			if event == "overlord":
@@ -411,6 +488,7 @@ func _on_enemy_removed_for_objectives(enemy: Enemy) -> void:
 	var enemy_id: String = enemy.definition.enemy_id
 	objectives.record_kill(enemy_id)
 	final_battle.record_kill(enemy_id)
+	meta.on_kill(enemy_id)
 	if enemy == _boss_enemy:
 		objectives.record_boss_defeated()
 		var gold: int = boss_phases.claim_reward(true)
@@ -424,9 +502,17 @@ func _on_enemy_removed_for_objectives(enemy: Enemy) -> void:
 			game_state.set_flag(CampaignObjectives.FLAG_REGION_ONE, true)
 
 
-func _on_wave_completed_for_objectives(_wave_number: int) -> void:
+func _on_wave_completed_for_objectives(wave_number: int) -> void:
 	var max_health: float = maxf(float(game_state.wall_max_health), 1.0)
 	objectives.record_wave_end(float(game_state.wall_health) / max_health)
+	var intro: String = meta.start_region_overlord(wave_number)
+	if intro != "":
+		overseer_message.emit(intro)
+	var result: Dictionary = meta.on_wave_completed(wave_number, game_state.wall_tier)
+	for text: String in result["messages"]:
+		overseer_message.emit(text)
+	for achievement_id: String in result["achievements"]:
+		achievement_unlocked.emit(achievement_id)
 
 
 func _on_defence_fire(origin: Vector2, target: Enemy, damage: float) -> void:
@@ -459,8 +545,17 @@ func save_now() -> bool:
 			"wave": waves.current_wave,
 			"upgrades": upgrades.levels.duplicate(),
 			"archers": archer_positions,
+			"buildings": constructions.completed_list(),
+			"defence_levels": _defence_levels(),
+			"abilities": abilities.to_dict(),
+			"objectives": objectives.to_dict(),
+			"boss": boss_phases.to_dict(),
+			"final_battle": final_battle.to_dict(),
+			"last_stand_until": _last_stand_until,
 		},
 	}
+	# The save time lets the next load work out offline production (SVTLW-75).
+	game_state.last_saved_unix = int(Time.get_unix_time_from_system())
 	return save_manager.save_game(extra)
 
 
@@ -481,8 +576,81 @@ func restore_from_save() -> bool:
 	for entry: Variant in saved.get("archers", []):
 		if typeof(entry) == TYPE_ARRAY and entry.size() == 2:
 			units.restore_unit("archer", Vector2(float(entry[0]), float(entry[1])))
+	# Finished buildings come back on their slots first, so defence structures and production exist (save restore gap).
+	for entry: Variant in saved.get("buildings", []):
+		if typeof(entry) == TYPE_DICTIONARY:
+			constructions.restore_completed(str(entry.get("building_id", "")), int(entry.get("slot", -1)))
+	var levels_saved: Variant = saved.get("defence_levels", {})
+	if typeof(levels_saved) == TYPE_DICTIONARY:
+		for id: Variant in levels_saved:
+			var structure: DefenceStructure = _defences.get(str(id), null)
+			if structure != null:
+				var target: int = clampi(int(levels_saved[id]), 1, structure.max_level)
+				while structure.level < target and structure.upgrade():
+					pass
 	production.load_from_state()
+	_apply_offline_progress()
+	if typeof(saved.get("abilities", null)) == TYPE_DICTIONARY:
+		abilities.from_dict(saved["abilities"])
+	if typeof(saved.get("objectives", null)) == TYPE_DICTIONARY:
+		objectives.from_dict(saved["objectives"])
+	if typeof(saved.get("boss", null)) == TYPE_DICTIONARY:
+		boss_phases.from_dict(saved["boss"])
+	if typeof(saved.get("final_battle", null)) == TYPE_DICTIONARY:
+		final_battle.from_dict(saved["final_battle"])
+	_last_stand_until = int(saved.get("last_stand_until", 0))
 	return true
+
+
+## Adds the production earned while the game was closed, capped and with the Recursive Production bonus (SVTLW-75).
+func _apply_offline_progress() -> void:
+	var rates: Dictionary = {}
+	for resource: String in OfflineProgress.RESOURCE_ORDER:
+		rates[resource] = production.production_per_tick_for(resource) * (1.0 + _exploit.get("recursive_production_bonus", 0.0))
+	var result: Dictionary = meta.offline_gain(rates, game_state.last_saved_unix, int(Time.get_unix_time_from_system()), game_state.offline_enabled)
+	var gained: Dictionary = result["gained"]
+	for resource: String in gained:
+		if int(gained[resource]) > 0:
+			game_state.add_material(resource, int(gained[resource]))
+	var summary: String = OfflineProgress.format_summary(result)
+	if summary != "":
+		overseer_message.emit(summary)
+
+
+## Prestige: converts the run into relics, then clears the run. The caller reloads the scene (SVTLW-73).
+func prestige_now() -> int:
+	ensure_ready()
+	return meta.prestige_reset(game_state.stats.to_dict())
+
+
+## Left click selects the archer, enemy or building under the cursor, for the context panel (SVTLW-52 gap).
+func _unhandled_input(event: InputEvent) -> void:
+	if not (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT):
+		return
+	if not _built or context_panel == null:
+		return
+	var point: Vector2 = get_global_mouse_position()
+	for archer: Archer in units.archers:
+		if archer.global_position.distance_to(point) <= 24.0:
+			context_panel.show_unit(archer)
+			return
+	for enemy: Enemy in enemies.enemies:
+		if is_instance_valid(enemy) and enemy.alive and enemy.global_position.distance_to(point) <= 24.0:
+			context_panel.show_enemy(enemy)
+			return
+	for building_id: String in _defences:
+		var structure: DefenceStructure = _defences[building_id]
+		if structure.global_position.distance_to(point) <= 28.0:
+			context_panel.show_building(building_id)
+			return
+
+
+## Upgrade level of each built defence structure, for saving.
+func _defence_levels() -> Dictionary:
+	var out: Dictionary = {}
+	for id: Variant in _defences:
+		out[id] = (_defences[id] as DefenceStructure).level
+	return out
 
 
 func _notification(what: int) -> void:
@@ -503,13 +671,22 @@ func _on_projectile_hit(target: Enemy, damage: float) -> void:
 			damage = AbominationPhases.hide_damage(damage)
 			if target.definition.max_health > 0.0:
 				boss_phases.update_phase(target.health / target.definition.max_health)
+		# Exploitation: a higher per-hit cap, and extra damage to every enemy (SVTLW-71).
+		damage = minf(damage, HIT_CAP_BASE * (1.0 + _exploit.get("overflow_damage_cap", 0.0)))
+		damage *= 1.0 + _exploit.get("reality_desync_vs_machines", 0.0)
 		damage_numbers.show_hit(target.global_position, damage)
+		meta.on_damage_dealt(damage)
 		enemies.damage_enemy(target, damage)
+		var overlord_text: String = meta.damage_overlord(damage)
+		if overlord_text != "":
+			overseer_message.emit(overlord_text)
 		effects.spawn_impact(effects.to_local(target.global_position))
 		_sound("hit")
 
 
 func _on_wall_destroyed() -> void:
+	for line: String in meta.on_wall_destroyed():
+		death_line.emit(line)
 	clock.set_paused(true)
 	game_over.emit()
 
