@@ -86,6 +86,10 @@ func on_tick(_tick_index: int) -> void:
 			construction_completed.emit(building_id, slot)
 
 
+func is_slot_free(slot: int) -> bool:
+	return slot >= 0 and not _slot_owner.has(slot)
+
+
 func is_built(building_id: String) -> bool:
 	return _completed.has(building_id)
 

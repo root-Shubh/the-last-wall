@@ -47,7 +47,11 @@ func start_next_wave() -> bool:
 
 func _get_definition(wave_number: int) -> WaveDefinition:
 	if generator != null:
-		return generator.generate(wave_number)
+		var generated: WaveDefinition = generator.generate(wave_number)
+		if generated != null:
+			return generated
+	if catalog == null:
+		return null
 	return catalog.get_wave(wave_number)
 
 

@@ -13,6 +13,8 @@ const HIT_DISTANCE: float = 8.0
 var target: Enemy = null
 var damage: float = 0.0
 var in_flight: bool = false
+## True for shots from defence structures: a hit there also raises an explosion (SVTLW-100).
+var explosive: bool = false
 
 
 func launch(origin: Vector2, aim_at: Enemy, amount: float) -> void:

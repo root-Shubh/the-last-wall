@@ -27,6 +27,8 @@ func build() -> void:
 	add_child(row)
 	_button(row, "Recruit Archer", func() -> void: recruit())
 	_button(row, "Start Wave", func() -> void: start_wave())
+	_button(row, "Build Tower", func() -> void: build_building("tower"))
+	_button(row, "Build Production", func() -> void: build_building("lumber_mill"))
 	_button(row, "Save", func() -> void: save())
 	_button(row, "Quit", func() -> void: quit_requested.emit())
 
@@ -41,6 +43,13 @@ func recruit() -> Archer:
 
 func start_wave() -> bool:
 	return field != null and field.start_wave()
+
+
+## Starts a build on the first free fixed slot through the battlefield. False when refused or no slot is free.
+func build_building(building_id: String) -> bool:
+	if field == null:
+		return false
+	return field.build(building_id, field.free_slot())
 
 
 func save() -> bool:

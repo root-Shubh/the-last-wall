@@ -4,6 +4,8 @@ class_name ProjectilePool
 extends Node2D
 
 signal projectile_hit(target: Enemy, damage: float)
+## Emitted with the hit point when an explosive shot lands (SVTLW-100).
+signal explosion_requested(at: Vector2)
 
 @export var initial_size: int = 64
 
@@ -28,7 +30,7 @@ func _warm() -> void:
 
 
 ## Launches a projectile from origin at an enemy. Returns null when no target is given.
-func fire(origin: Vector2, target: Enemy, damage: float) -> Projectile:
+func fire(origin: Vector2, target: Enemy, damage: float, explosive: bool = false) -> Projectile:
 	if target == null:
 		return null
 	_warm()
@@ -38,6 +40,7 @@ func fire(origin: Vector2, target: Enemy, damage: float) -> Projectile:
 	var projectile: Projectile = _idle.pop_back()
 	_active.append(projectile)
 	projectile.launch(origin, target, damage)
+	projectile.explosive = explosive
 	return projectile
 
 
@@ -58,15 +61,20 @@ func _create() -> void:
 	var projectile: Projectile = Projectile.new()
 	add_child(projectile)
 	projectile.visible = false
-	projectile.hit.connect(_on_hit)
+	projectile.hit.connect(_on_hit.bind(projectile))
 	projectile.expired.connect(_on_done)
 	total_created += 1
 	_idle.append(projectile)
 
 
-func _on_hit(target: Enemy, damage: float) -> void:
+func _on_hit(target: Enemy, damage: float, projectile: Projectile) -> void:
+	var at: Vector2 = target.global_position if is_instance_valid(target) else projectile.global_position
+	var explosive: bool = projectile.explosive
+	projectile.explosive = false
 	_release_current()
 	projectile_hit.emit(target, damage)
+	if explosive:
+		explosion_requested.emit(at)
 
 
 func _on_done(_projectile: Projectile) -> void:
