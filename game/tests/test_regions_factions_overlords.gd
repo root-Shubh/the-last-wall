@@ -12,6 +12,7 @@ func _initialize() -> void:
 	_test_overlord_files()
 	_test_overlord_phases_and_defeat()
 	_test_region_bosses_resolve()
+	_test_post_game()
 	print("RESULT: %s (%d failure(s))" % ["PASS" if _failures == 0 else "FAIL", _failures])
 	quit(0 if _failures == 0 else 1)
 
@@ -123,3 +124,28 @@ func _test_region_bosses_resolve() -> void:
 		var found: bool = ResourceLoader.exists("res://resources/overlords/%s.tres" % boss) \
 			or ResourceLoader.exists("res://resources/enemies/%s.tres" % boss)
 		_check(found, "%s boss %s has a definition" % [id, boss])
+
+
+func _test_post_game() -> void:
+	print("post-game")
+	var post: PostGame = PostGame.new()
+	_check(not post.is_unlocked(false) and post.is_unlocked(true), "post-game is locked until the ending flag")
+	_check(is_equal_approx(post.difficulty_multiplier(0), 1.0), "no cycles means multiplier 1.0")
+	_check(is_equal_approx(post.difficulty_multiplier(3), 1.3), "multiplier grows 0.1 per cycle")
+	_check(is_equal_approx(post.difficulty_multiplier(100), 5.0), "multiplier caps at 5.0")
+	_check(post.optional_boss_ids(0).is_empty(), "no optional bosses before cycle 1")
+	_check(post.optional_boss_ids(1).has("architect") and post.optional_boss_ids(1).size() == 4,
+		"all four overlords are optional bosses after cycle 1")
+	var state = load("res://autoload/game_state.gd").new()
+	var base: Dictionary = {"gold": 0, "wave": 0, "wall_health": 100, "wall_max_health": 100}
+	base["post_game_cycles"] = 7
+	state.from_dict(base)
+	_check(state.post_game_cycles == 7, "post_game_cycles loads from a save")
+	base["post_game_cycles"] = 99999
+	state.from_dict(base)
+	_check(state.post_game_cycles == 1000, "post_game_cycles is clamped on load")
+	base.erase("post_game_cycles")
+	state.from_dict(base)
+	_check(state.post_game_cycles == 0 and state.to_dict()["post_game_cycles"] == 0,
+		"older saves load with zero post-game cycles")
+	state.free()
