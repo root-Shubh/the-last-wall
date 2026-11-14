@@ -23,6 +23,9 @@ extends Resource
 @export_range(1, 1000) var attack_interval_ticks: int = 10
 ## Gold granted when this enemy is killed (SVTLW-27).
 @export var gold_reward: int = 1
+## Optional material granted on kill (SVTLW-56): "wood", "stone" or "iron". Empty grants none.
+@export var resource_reward_type: String = ""
+@export var resource_reward_amount: int = 0
 ## Shield bearer only: radius in world pixels where allies take less damage. Zero disables it.
 @export var shield_radius: float = 0.0
 ## Shield bearer only: fraction of incoming damage an allied enemy in range does not take.

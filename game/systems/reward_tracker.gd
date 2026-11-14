@@ -4,6 +4,8 @@ class_name RewardTracker
 extends Node
 
 signal reward_granted(amount: int, reason: String)
+## Material granted by a kill, for example wood or stone (SVTLW-56).
+signal material_granted(material: String, amount: int)
 
 ## Survival bonus per cleared wave is this value times the wave number.
 @export var survival_bonus_per_wave: int = 10
@@ -35,9 +37,19 @@ func _on_enemy_removed(enemy: Enemy) -> void:
 	var amount: int = enemy.definition.gold_reward + kill_gold_bonus
 	if amount <= 0:
 		return
-	gold_from_kills += amount
-	state.add_gold(amount)
-	reward_granted.emit(amount, "kill")
+	if amount > 0:
+		gold_from_kills += amount
+		state.add_gold(amount)
+		reward_granted.emit(amount, "kill")
+	_grant_material_reward(enemy.definition)
+
+
+## Grants the enemy's optional material reward (SVTLW-56). Does nothing when no type or amount is set.
+func _grant_material_reward(definition: EnemyDefinition) -> void:
+	if definition.resource_reward_type == "" or definition.resource_reward_amount <= 0:
+		return
+	state.add_material(definition.resource_reward_type, definition.resource_reward_amount)
+	material_granted.emit(definition.resource_reward_type, definition.resource_reward_amount)
 
 
 func _on_wave_completed(wave_number: int) -> void:

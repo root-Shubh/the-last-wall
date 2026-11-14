@@ -49,6 +49,10 @@ func start_block_reason(building_id: String, slot: int) -> String:
 		return "slot occupied"
 	if not _gold().can_afford(data.build_cost):
 		return "not enough gold"
+	var material_costs: Dictionary = {"wood": data.wood_cost, "stone": data.stone_cost, "iron": data.iron_cost}
+	for material: String in GameState.MATERIAL_IDS:
+		if not _gold().can_afford_material(material, material_costs[material]):
+			return "not enough %s" % material
 	return ""
 
 
@@ -57,8 +61,11 @@ func start_construction(building_id: String, slot: int) -> bool:
 	if start_block_reason(building_id, slot) != "":
 		return false
 	var data: BuildingDefinition = definition(building_id)
-	if not _gold().spend_gold(data.build_cost):
-		return false
+	# The start check covers every cost, so these spends cannot fail once it has passed.
+	_gold().spend_gold(data.build_cost)
+	_gold().spend_material("wood", data.wood_cost)
+	_gold().spend_material("stone", data.stone_cost)
+	_gold().spend_material("iron", data.iron_cost)
 	active.append({"building_id": building_id, "slot": slot, "progress": 0})
 	_slot_owner[slot] = building_id
 	construction_started.emit(building_id, slot)
