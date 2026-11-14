@@ -40,9 +40,14 @@ func spawn(enemy_id: String) -> Enemy:
 	return enemy
 
 
+## Index loop over the live array: no copy per tick (SVTLW-90). Stops early if a signal handler
+## removed enemies during the tick, so a shrinking array never reads past its end.
 func on_tick(tick_index: int) -> void:
-	for enemy: Enemy in enemies.duplicate():
-		enemy.on_tick(tick_index)
+	var count: int = enemies.size()
+	for i: int in range(count):
+		if i >= enemies.size():
+			break
+		enemies[i].on_tick(tick_index)
 
 
 ## Applies damage to an enemy after allied shields (SVTLW-57). Returns the damage actually dealt.
