@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="Region" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/region.gd" id="1_region"]
+
+[resource]
+script = ExtResource("1_region")
+region_id = "cursed_highlands"
+display_name = "Cursed Highlands"
+first_wave = 301
+last_wave = 450
+enemy_ids = PackedStringArray("flying_machine", "climber", "poison_spitter", "corrupted_predator")
+boss_id = "devourer"
+objective_text = "Bring down the flying machines above the ridge before they reach the wall from the sky."

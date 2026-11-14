@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="Region" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/region.gd" id="1_region"]
+
+[resource]
+script = ExtResource("1_region")
+region_id = "fallen_kingdom"
+display_name = "Fallen Kingdom"
+first_wave = 1
+last_wave = 50
+enemy_ids = PackedStringArray("undead_infantry", "runner", "shield_bearer")
+boss_id = "armoured_brute"
+objective_text = "Hold the broken gate. Survive 50 waves while the old kingdom's walls are rebuilt."

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="Region" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/region.gd" id="1_region"]
+
+[resource]
+script = ExtResource("1_region")
+region_id = "iron_wastes"
+display_name = "Iron Wastes"
+first_wave = 151
+last_wave = 300
+enemy_ids = PackedStringArray("ancient_construct", "guardian", "armoured_brute", "runner")
+boss_id = "executor"
+objective_text = "Break the siege engines of the ancient constructs and hold the wastes for 150 waves."

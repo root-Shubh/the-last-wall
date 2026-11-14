@@ -30,6 +30,9 @@ const MAX_WALL_TIER: int = 7
 var wall_tier: int = 1
 ## Hidden simulation instability 0 to 100 (SVTLW-69). Optional in saves; raised by milestones.
 var instability: float = 0.0
+## Completed post-game cycles (SVTLW-85). Zero until the canonical ending is seen and a cycle is finished.
+const MAX_POST_GAME_CYCLES: int = 1000
+var post_game_cycles: int = 0
 
 ## Cosmetic and narrative only (SVTLW-42). Both characters play identically.
 const CHARACTER_IDS: Array[String] = ["male", "female"]
@@ -38,6 +41,8 @@ var character_id: String = ""
 var character_name: String = ""
 ## Story flags such as intro_seen (SVTLW-41). Values are booleans.
 var flags: Dictionary = {}
+## Research save data (SVTLW-61): {"points": int, "researched": Array of ids}. Written by ResearchManager.
+var research: Dictionary = {}
 
 
 ## Restores every value to a new game.
@@ -52,9 +57,11 @@ func reset() -> void:
 	wall_health = wall_max_health
 	wall_tier = 1
 	instability = 0.0
+	post_game_cycles = 0
 	character_id = ""
 	character_name = ""
 	flags.clear()
+	research = {}
 	resources_changed.emit(gold)
 	_emit_materials()
 	wave_changed.emit(current_wave)
@@ -205,6 +212,8 @@ func to_dict() -> Dictionary:
 		"production": production_levels.duplicate(),
 		"wall_tier": wall_tier,
 		"instability": instability,
+		"research": research.duplicate(true),
+		"post_game_cycles": post_game_cycles,
 	}
 
 
@@ -255,10 +264,33 @@ func from_dict(data: Dictionary) -> bool:
 
 	# Instability (SVTLW-69) is optional; missing or invalid values load as 0.
 	var new_instability: float = SimulationInstability.sanitize_value(data.get("instability", 0.0))
+	# Research (SVTLW-61) is optional so saves from before the research story load with zero points.
+	var new_research: Dictionary = {"points": 0, "researched": []}
+	var raw_research: Variant = data.get("research", {})
+	if typeof(raw_research) == TYPE_DICTIONARY:
+		var points: Variant = raw_research.get("points", 0)
+		if _is_non_negative_whole(points):
+			new_research["points"] = int(points)
+		var ids: Variant = raw_research.get("researched", [])
+		if typeof(ids) == TYPE_ARRAY:
+			for id: Variant in ids:
+				if typeof(id) == TYPE_STRING and not new_research["researched"].has(id):
+					new_research["researched"].append(id)
 
 	gold = int(data["gold"])
 	instability = new_instability
 	wall_tier = new_tier
+	research = new_research
+
+	# Post-game cycles (SVTLW-85) are optional so older saves load with zero, and clamped to the maximum.
+	var new_cycles: int = 0
+	var raw_cycles: Variant = data.get("post_game_cycles", 0)
+	if _is_non_negative_whole(raw_cycles):
+		new_cycles = mini(int(raw_cycles), MAX_POST_GAME_CYCLES)
+
+	gold = int(data["gold"])
+	wall_tier = new_tier
+	post_game_cycles = new_cycles
 	production_levels = new_production
 	wood = new_materials["wood"]
 	stone = new_materials["stone"]

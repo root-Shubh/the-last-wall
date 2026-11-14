@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ResearchDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/research_definition.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+research_id = "log_unit_capacity"
+display_name = "Unit Capacity"
+branch = "Logistics"
+cost_rp = 20
+prerequisites = PackedStringArray("log_recruit_drills")
+exclusive_with = PackedStringArray()
+effect_key = "unit_capacity_bonus"
+effect_value = 1.0

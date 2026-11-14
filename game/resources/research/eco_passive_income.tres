@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ResearchDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/research_definition.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+research_id = "eco_passive_income"
+display_name = "Passive Income"
+branch = "Economy"
+cost_rp = 30
+prerequisites = PackedStringArray("eco_efficient_mining")
+exclusive_with = PackedStringArray()
+effect_key = "passive_gold_per_wave"
+effect_value = 5.0

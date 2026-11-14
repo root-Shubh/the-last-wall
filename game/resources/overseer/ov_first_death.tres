@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="OverseerMessage" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/overseer_message.gd" id="1_msg"]
+
+[resource]
+script = ExtResource("1_msg")
+message_id = "ov_first_death"
+text = "A defender has fallen. Their name is logged. Keep the line moving."
+trigger_kind = "deaths"
+trigger_value = 1

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ResearchDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/research_definition.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+research_id = "sim_unbounded_multipliers"
+display_name = "Unbounded Multipliers"
+branch = "Simulation Exploitation"
+prerequisites = PackedStringArray("sim_recursive_production")
+effect_key = "unbounded_multiplier_bonus"
+effect_value = 0.05
+cost_rp = 2

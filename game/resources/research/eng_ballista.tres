@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ResearchDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/research_definition.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+research_id = "eng_ballista"
+display_name = "Ballista Emplacements"
+branch = "Engineering"
+cost_rp = 30
+prerequisites = PackedStringArray("eng_wall_plating")
+exclusive_with = PackedStringArray()
+effect_key = "artillery_damage_bonus"
+effect_value = 0.2

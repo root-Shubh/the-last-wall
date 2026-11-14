@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="DialogueSequence" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://resources/dialogue_sequence.gd" id="1_seq"]
+[ext_resource type="Script" path="res://resources/dialogue_line.gd" id="2_line"]
+
+[sub_resource type="Resource" id="l1"]
+script = ExtResource("2_line")
+speaker = "OVERSEER"
+text = "Commander. The wall holds. Keep it that way."
+
+[sub_resource type="Resource" id="l2"]
+script = ExtResource("2_line")
+speaker = "OVERSEER"
+text = "Every wave you survive is logged. Every loss is logged too."
+
+[sub_resource type="Resource" id="l3"]
+script = ExtResource("2_line")
+speaker = "SYSTEM"
+text = "ACT I: THE DEFENCE."
+duration_seconds = 2.0
+
+[resource]
+script = ExtResource("1_seq")
+sequence_id = "act_1"
+lines = Array[ExtResource("2_line")]([SubResource("l1"), SubResource("l2"), SubResource("l3")])
