@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="DialogueSequence" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://resources/dialogue_sequence.gd" id="1_seq"]
+[ext_resource type="Script" path="res://resources/dialogue_line.gd" id="2_line"]
+
+[sub_resource type="Resource" id="l1"]
+script = ExtResource("2_line")
+speaker = "SYSTEM"
+text = "WARNING: ENEMY MOVEMENT NOT MATCHING SIMULATION."
+duration_seconds = 2.5
+
+[sub_resource type="Resource" id="l2"]
+script = ExtResource("2_line")
+speaker = "OVERSEER"
+text = "Some of them are freezing mid-stride. I did not program that."
+
+[sub_resource type="Resource" id="l3"]
+script = ExtResource("2_line")
+speaker = "OVERSEER"
+text = "And the counters. Look at the counters, Commander. They are wrong."
+
+[sub_resource type="Resource" id="l4"]
+script = ExtResource("2_line")
+speaker = "SYSTEM"
+text = "ACT II: SOMETHING IS WRONG."
+duration_seconds = 2.0
+
+[resource]
+script = ExtResource("1_seq")
+sequence_id = "act_2"
+lines = Array[ExtResource("2_line")]([SubResource("l1"), SubResource("l2"), SubResource("l3"), SubResource("l4")])
