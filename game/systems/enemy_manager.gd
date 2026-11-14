@@ -9,6 +9,8 @@ signal wall_attacked(damage: float)
 @export var definitions: Array[EnemyDefinition] = []
 @export var spawn_x: float = 1180.0
 @export var wall_stop_x: float = 230.0
+## Y coordinate of the enemy lane. Archers must be within range of this line to fire at enemies.
+@export var lane_y: float = 360.0
 
 var enemies: Array[Enemy] = []
 var _by_id: Dictionary = {}
@@ -28,7 +30,7 @@ func spawn(enemy_id: String) -> Enemy:
 
 	var enemy: Enemy = Enemy.new()
 	add_child(enemy)
-	enemy.setup(_by_id[enemy_id], spawn_x, wall_stop_x)
+	enemy.setup(_by_id[enemy_id], spawn_x, wall_stop_x, lane_y)
 	enemy.died.connect(_on_enemy_left)
 	enemy.reached_wall.connect(_on_reached_wall)
 	enemy.attacked_wall.connect(_on_attacked_wall)
