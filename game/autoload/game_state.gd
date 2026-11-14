@@ -28,6 +28,8 @@ var wall_health: int = DEFAULT_WALL_MAX_HEALTH
 ## Current wall tier 1 to MAX_WALL_TIER (SVTLW-63). Set by WallTierManager.
 const MAX_WALL_TIER: int = 7
 var wall_tier: int = 1
+## Hidden simulation instability 0 to 100 (SVTLW-69). Optional in saves; raised by milestones.
+var instability: float = 0.0
 ## Completed post-game cycles (SVTLW-85). Zero until the canonical ending is seen and a cycle is finished.
 const MAX_POST_GAME_CYCLES: int = 1000
 var post_game_cycles: int = 0
@@ -54,6 +56,7 @@ func reset() -> void:
 	wall_max_health = DEFAULT_WALL_MAX_HEALTH
 	wall_health = wall_max_health
 	wall_tier = 1
+	instability = 0.0
 	post_game_cycles = 0
 	character_id = ""
 	character_name = ""
@@ -208,8 +211,8 @@ func to_dict() -> Dictionary:
 		"flags": flags.duplicate(),
 		"production": production_levels.duplicate(),
 		"wall_tier": wall_tier,
+		"instability": instability,
 		"research": research.duplicate(true),
-
 		"post_game_cycles": post_game_cycles,
 	}
 
@@ -259,6 +262,8 @@ func from_dict(data: Dictionary) -> bool:
 	if _is_non_negative_whole(raw_tier) and int(raw_tier) >= 1:
 		new_tier = mini(int(raw_tier), MAX_WALL_TIER)
 
+	# Instability (SVTLW-69) is optional; missing or invalid values load as 0.
+	var new_instability: float = SimulationInstability.sanitize_value(data.get("instability", 0.0))
 	# Research (SVTLW-61) is optional so saves from before the research story load with zero points.
 	var new_research: Dictionary = {"points": 0, "researched": []}
 	var raw_research: Variant = data.get("research", {})
@@ -273,6 +278,7 @@ func from_dict(data: Dictionary) -> bool:
 					new_research["researched"].append(id)
 
 	gold = int(data["gold"])
+	instability = new_instability
 	wall_tier = new_tier
 	research = new_research
 
