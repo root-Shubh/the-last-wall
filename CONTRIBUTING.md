@@ -17,6 +17,10 @@ Example: `SVTLW-20 #comment create repository and initial project structure`
 
 After each commit, post the same summary as a comment on the Jira issue.
 
+## Changelog
+
+Every change to `game/` or `docs/` adds a fragment file `changelog.d/<JIRA-KEY>.md` (see `changelog.d/README.md`). Do not edit `CHANGELOG.md` in a feature branch: that is what made every PR conflict (SVTLW-102).
+
 ## Pull requests
 
 Each PR states the Jira key, what changed, how it was tested, and known issues. Visual changes include a screenshot or clip.
