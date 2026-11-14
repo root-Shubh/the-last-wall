@@ -14,7 +14,10 @@ extends Resource
 ## climber: scales the wall face and attacks from above, so its hits ignore wall armour
 ##   (bypass_wall_armour). Counter: only melee defenders (spearman, swordsman) can stop it;
 ##   archers cannot (melee_counter_only). Until those defenders exist it cannot be stopped.
-@export_enum("pressure", "swarm", "wall_breaker", "shield_bearer", "climber") var role: String = "pressure"
+## Countermeasure roles (SVTLW-72) each carry one tactical rule; see docs/NARRATIVE.md "Machine countermeasures".
+@export_enum("pressure", "swarm", "wall_breaker", "shield_bearer", "climber",
+	"resource_suppressor", "damage_limiter", "calculation_guardian", "process_terminator",
+	"memory_devourer", "recursive_sentinel") var role: String = "pressure"
 @export var max_health: float = 10.0
 @export var armour: float = 0.0
 ## World pixels per second at 1x.
@@ -33,8 +36,28 @@ extends Resource
 @export_range(0.0, 1.0) var shield_fraction: float = 0.0
 ## Climber only: attacks on the wall ignore the wall's flat armour (WallManager.armour).
 @export var bypass_wall_armour: bool = false
-## Climber only: when true, only the ids in MELEE_DEFENDER_IDS can stop it.
+## Climber and process terminator: when true, only the ids in MELEE_DEFENDER_IDS can stop it.
 @export var melee_counter_only: bool = false
+## Damage limiter (SVTLW-72): no single hit deals more than this. Zero disables it.
+@export var hit_cap: float = 0.0
+## Calculation guardian (SVTLW-72): a single hit above this is ignored entirely. Zero disables it.
+@export var immune_above_hit: float = 0.0
+## Memory devourer (SVTLW-72): while alive, one research effect is disabled. Integration reads this flag.
+@export var disables_research_while_alive: bool = false
+## Recursive sentinel (SVTLW-72): health gained each time it is hit, up to max_health. Zero disables it.
+## Data only until battlefield integration applies it.
+@export var heal_on_hit: float = 0.0
 
 ## Defender ids that count as melee for melee_counter_only enemies. Units not yet in the game.
 const MELEE_DEFENDER_IDS: PackedStringArray = ["spearman", "swordsman"]
+
+
+## Pure rule for SVTLW-72 hit limits: returns the damage this enemy takes from one raw hit.
+## Guardian immunity is checked on the raw hit first, then the damage limiter caps what remains.
+func damage_after_hit_rules(raw_damage: float) -> float:
+	var amount: float = maxf(raw_damage, 0.0)
+	if immune_above_hit > 0.0 and amount > immune_above_hit:
+		return 0.0
+	if hit_cap > 0.0:
+		amount = minf(amount, hit_cap)
+	return amount
