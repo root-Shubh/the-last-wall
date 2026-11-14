@@ -10,6 +10,8 @@ signal wave_completed(wave_number: int)
 signal all_waves_completed
 
 @export var catalog: WaveCatalog
+## Optional (SVTLW-59). When set, waves come from the generator and the catalog is ignored.
+@export var generator: WaveGenerator
 @export var auto_start: bool = false
 
 var current_wave: int = 0
@@ -22,10 +24,10 @@ var _running: bool = false
 
 ## Starts the next wave in the catalog. Returns false if a wave is running or none remain.
 func start_next_wave() -> bool:
-	if _running or catalog == null:
+	if _running or (catalog == null and generator == null):
 		return false
 	var next_number: int = current_wave + 1
-	var definition: WaveDefinition = catalog.get_wave(next_number)
+	var definition: WaveDefinition = _get_definition(next_number)
 	if definition == null:
 		all_waves_completed.emit()
 		return false
@@ -41,6 +43,12 @@ func start_next_wave() -> bool:
 	if definition.enemy_count <= 0:
 		_check_complete()
 	return true
+
+
+func _get_definition(wave_number: int) -> WaveDefinition:
+	if generator != null:
+		return generator.generate(wave_number)
+	return catalog.get_wave(wave_number)
 
 
 ## Called on each simulation tick, usually from the battlefield's SimulationClock.
