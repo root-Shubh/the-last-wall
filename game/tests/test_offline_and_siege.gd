@@ -15,6 +15,7 @@ func _initialize() -> void:
 	_test_offline_clock_changes()
 	_test_offline_summary()
 	_test_offline_game_state_defaults()
+	_test_endless_siege()
 	print("RESULT: %s (%d failure(s))" % ["PASS" if _failures == 0 else "FAIL", _failures])
 	quit(0 if _failures == 0 else 1)
 
@@ -88,3 +89,26 @@ func _test_offline_game_state_defaults() -> void:
 	state.reset()
 	_check(state.from_dict(copy) and state.last_saved_unix == 1234 and state.offline_enabled == false, "offline fields round-trip through save data")
 	state.reset()
+
+
+func _test_endless_siege() -> void:
+	var siege: EndlessSiege = EndlessSiege.new()
+	_check(siege.highest_wave == 0 and siege.total_kills == 0, "endless siege starts with zeroed stats")
+	var wave_151: WaveDefinition = siege.definition_for(151)
+	_check(wave_151 != null and wave_151.wave_number == 151, "endless siege returns a definition for wave 151")
+	_check(siege.definition_for(200) != null, "endless siege returns a definition for wave 200")
+	var wave_1000: WaveDefinition = siege.definition_for(1000)
+	_check(wave_1000 != null and wave_1000.enemy_count > 36, "wave 1000 is larger than the Endless start")
+	_check(siege.highest_wave == 1000, "highest_wave moves to the furthest wave reached")
+	siege.definition_for(500)
+	_check(siege.highest_wave == 1000, "highest_wave never moves backwards")
+	siege.record_kills(25)
+	siege.record_kills(-4)
+	_check(siege.total_kills == 25, "total_kills adds kills and ignores negative counts")
+	var bad: int = 0
+	for wave: int in range(151, 1201):
+		var definition: WaveDefinition = siege.definition_for(wave)
+		if definition == null or definition.enemy_count < 1 or definition.spawn_interval_ticks < 6:
+			bad += 1
+	_check(bad == 0, "waves 151 to 1200 all have valid data")
+	_check(siege.definition_for(100001) == null, "waves past the Endless stage end (no data error)")
