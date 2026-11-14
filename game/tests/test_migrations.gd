@@ -118,6 +118,9 @@ func _test_round_trip(state: Node, saves: Node) -> void:
 	state.add_material("wood", 7)
 	state.production_levels = {"smithy": 2}
 	state.wall_tier = 3
+	# A fresh reset leaves research as {}, but loading always fills in {"points", "researched"}.
+	# Setting research here makes the round trip compare real data rather than that default shape.
+	state.research = {"points": 3, "researched": ["archery_1"]}
 	var before: Dictionary = state.to_dict()
 
 	_check(saves.save_game({"battlefield": {"tick": 9}}), "save_game writes the state")
