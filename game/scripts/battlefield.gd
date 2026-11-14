@@ -40,8 +40,12 @@ func ensure_ready() -> void:
 		game_state = get_node_or_null("/root/GameState")
 	if save_manager == null:
 		save_manager = get_node_or_null("/root/SaveManager")
+	if audio == null:
+		audio = get_node_or_null("/root/AudioManager")
 	settings = SettingsStore.new()
 	settings.load_from()
+	if audio != null:
+		audio.apply_settings(settings)
 	damage_numbers = DamageNumbers.new()
 	damage_numbers.settings = settings
 	add_child(damage_numbers)
@@ -150,7 +154,12 @@ func _connect_systems() -> void:
 	enemies.enemy_removed.connect(func(_e: Enemy) -> void: waves.report_enemy_removed())
 	enemies.wall_attacked.connect(func(damage: float) -> void:
 		wall.attack(damage)
+		_sound("wall_impact")
 		shake(clampf(damage, 1.0, 6.0)))
+	waves.wave_started.connect(func(_n: int) -> void: _sound("wave_start"))
+	waves.wave_completed.connect(func(_n: int) -> void: _sound("wave_end"))
+	rewards.reward_granted.connect(func(_a: int, _r: String) -> void: _sound("reward"))
+	upgrades.upgrade_purchased.connect(func(_id: String, _l: int) -> void: _sound("upgrade"))
 	units.unit_recruited.connect(_on_unit_recruited)
 	projectiles.projectile_hit.connect(_on_projectile_hit)
 	wall.wall_destroyed.connect(_on_wall_destroyed)
@@ -180,6 +189,13 @@ func _on_wave_completed(_wave_number: int) -> void:
 ## its own part: the wave reached, upgrade levels and where each archer stands.
 var save_manager: Node = null
 var _autosave_pending: bool = false
+## Sound event hooks (SVTLW-50). Null-safe: the game works without the audio autoload.
+var audio: Node = null
+
+
+func _sound(event_name: String) -> void:
+	if audio != null:
+		audio.play_event(event_name)
 
 
 func save_now() -> bool:
@@ -226,13 +242,15 @@ func _notification(what: int) -> void:
 
 func _on_unit_recruited(archer: Archer) -> void:
 	archer.fire_requested.connect(func(origin: Vector2, target: Enemy, damage: float) -> void:
-		projectiles.fire(origin, target, damage))
+		projectiles.fire(origin, target, damage)
+		_sound("shot"))
 
 
 func _on_projectile_hit(target: Enemy, damage: float) -> void:
 	if is_instance_valid(target):
 		damage_numbers.show_hit(target.global_position, damage)
 		target.take_damage(damage)
+		_sound("hit")
 
 
 func _on_wall_destroyed() -> void:
