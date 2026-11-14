@@ -55,6 +55,10 @@ jobs:
         shell: bash
         run: bash tools/check_changelog.sh "origin/${{ github.base_ref }}"
 
+      - name: Changelog gate tests
+        shell: bash
+        run: bash tools/test_check_changelog.sh
+
       - name: Run headless test suites
         shell: bash
         run: bash tools/run_tests.sh
