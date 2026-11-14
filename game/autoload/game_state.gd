@@ -21,6 +21,8 @@ var wood: int = 0
 var stone: int = 0
 var iron: int = 0
 var current_wave: int = 0
+## Completed production buildings: building_id -> level (SVTLW-55). Kept in sync by ProductionManager.
+var production_levels: Dictionary = {}
 var wall_max_health: int = DEFAULT_WALL_MAX_HEALTH
 var wall_health: int = DEFAULT_WALL_MAX_HEALTH
 
@@ -40,6 +42,7 @@ func reset() -> void:
 	stone = 0
 	iron = 0
 	current_wave = 0
+	production_levels.clear()
 	wall_max_health = DEFAULT_WALL_MAX_HEALTH
 	wall_health = wall_max_health
 	character_id = ""
@@ -192,6 +195,7 @@ func to_dict() -> Dictionary:
 		"character_id": character_id,
 		"character_name": character_name,
 		"flags": flags.duplicate(),
+		"production": production_levels.duplicate(),
 	}
 
 
@@ -225,7 +229,17 @@ func from_dict(data: Dictionary) -> bool:
 		var value: Variant = data.get(material, 0)
 		new_materials[material] = int(value) if _is_non_negative_whole(value) else 0
 
+	# Production (SVTLW-55) is optional so saves from before the production story load with none.
+	var new_production: Dictionary = {}
+	var raw_production: Variant = data.get("production", {})
+	if typeof(raw_production) == TYPE_DICTIONARY:
+		for key: Variant in raw_production:
+			var level: Variant = raw_production[key]
+			if typeof(key) == TYPE_STRING and _is_non_negative_whole(level) and int(level) >= 1:
+				new_production[key] = int(level)
+
 	gold = int(data["gold"])
+	production_levels = new_production
 	wood = new_materials["wood"]
 	stone = new_materials["stone"]
 	iron = new_materials["iron"]

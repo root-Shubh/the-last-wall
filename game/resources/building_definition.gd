@@ -19,3 +19,9 @@ extends Resource
 @export var attack_interval_ticks: int = 0
 ## World pixels.
 @export var attack_range: float = 0.0
+## Passive production (SVTLW-55). Empty resource or zero amount/interval means no output.
+## exposure_chance_per_interval is the chance, rolled deterministically per interval, of losing one unit.
+@export var production_resource: String = ""
+@export var production_per_interval: int = 0
+@export var production_interval_ticks: int = 0
+@export var exposure_chance_per_interval: float = 0.0
