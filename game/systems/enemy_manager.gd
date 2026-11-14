@@ -5,6 +5,8 @@ extends Node2D
 
 signal enemy_removed(enemy: Enemy)
 signal wall_attacked(damage: float)
+## Attacks from climbers (bypass_wall_armour). WallManager must apply no armour to these (SVTLW-57).
+signal wall_attacked_unarmoured(damage: float)
 
 @export var definitions: Array[EnemyDefinition] = []
 @export var spawn_x: float = 1180.0
@@ -43,6 +45,30 @@ func on_tick(tick_index: int) -> void:
 		enemy.on_tick(tick_index)
 
 
+## Applies damage to an enemy after allied shields (SVTLW-57). Returns the damage actually dealt.
+## Battlefield damage to enemies should go through here so shield bearers take effect.
+func damage_enemy(target: Enemy, amount: float) -> float:
+	if target == null or not target.alive:
+		return 0.0
+	var dealt: float = maxf(amount, 0.0) * (1.0 - shield_fraction_for(target))
+	target.take_damage(dealt)
+	return dealt
+
+
+## Strongest shield fraction from living bearers whose radius covers target. Bearers do not shield themselves.
+func shield_fraction_for(target: Enemy) -> float:
+	var best: float = 0.0
+	for bearer: Enemy in enemies:
+		if bearer == target or not bearer.alive or bearer.definition == null:
+			continue
+		var data: EnemyDefinition = bearer.definition
+		if data.shield_radius <= 0.0 or data.shield_fraction <= 0.0:
+			continue
+		if bearer.position.distance_to(target.position) <= data.shield_radius:
+			best = maxf(best, data.shield_fraction)
+	return best
+
+
 func living_count() -> int:
 	return enemies.size()
 
@@ -62,8 +88,11 @@ func _on_reached_wall(enemy: Enemy) -> void:
 	pass
 
 
-func _on_attacked_wall(_enemy: Enemy, damage: float) -> void:
-	wall_attacked.emit(damage)
+func _on_attacked_wall(enemy: Enemy, damage: float) -> void:
+	if enemy.definition != null and enemy.definition.bypass_wall_armour:
+		wall_attacked_unarmoured.emit(damage)
+	else:
+		wall_attacked.emit(damage)
 
 
 func _remove(enemy: Enemy) -> void:

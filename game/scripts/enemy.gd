@@ -44,6 +44,16 @@ func on_tick(_tick_index: int) -> void:
 		attacked_wall.emit(self, definition.wall_damage)
 
 
+## True when a defender of this id may stop this enemy (SVTLW-57). Most enemies can be stopped
+## by anything; melee_counter_only enemies (climbers) only by melee defenders.
+func can_be_stopped_by(defender_id: String) -> bool:
+	if definition == null:
+		return false
+	if not definition.melee_counter_only:
+		return true
+	return EnemyDefinition.MELEE_DEFENDER_IDS.has(defender_id)
+
+
 ## Applies final damage (already computed by DamageCalculator). Dies once; later hits do nothing.
 func take_damage(amount: float) -> void:
 	if not alive:
