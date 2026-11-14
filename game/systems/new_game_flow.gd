@@ -6,6 +6,8 @@ extends RefCounted
 
 const OPENING_PATH: String = "res://resources/dialogue/opening.tres"
 const FLAG_INTRO_SEEN: String = "intro_seen"
+## Gold a new game starts with: enough for two archers (SVTLW-99).
+const STARTING_GOLD: int = 60
 
 
 ## Returns false if the character or name is invalid. Nothing is reset in that case.
@@ -14,6 +16,7 @@ static func start(game_state: Node, dialogue: DialogueManager, character_id: Str
 		return false
 	game_state.reset()
 	game_state.set_character(character_id, display_name)
+	game_state.add_gold(STARTING_GOLD)
 	var opening: DialogueSequence = load(OPENING_PATH)
 	var on_finished: Callable = func(id: String) -> void:
 		if id == opening.sequence_id:
