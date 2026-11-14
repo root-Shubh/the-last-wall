@@ -32,6 +32,20 @@ const UPGRADE_GOLD_PER_LEVEL: int = 25
 const EXPLOSION_RADIUS: float = 40.0
 ## Built defence structures by building id. A building can only be built once.
 var _defences: Dictionary = {}
+## Active abilities, Region 1 objectives, The Abomination, Wave 1000 and the ending (SVTLW-64, 65, 66, 83, 84).
+var abilities: Abilities = Abilities.new()
+var objectives: CampaignObjectives = CampaignObjectives.new()
+var boss_phases: AbominationPhases = AbominationPhases.new()
+var final_battle: FinalBattle = FinalBattle.new()
+var ending: EndingSequence = EndingSequence.new()
+var _boss_enemy: Enemy = null
+var _tick_index: int = 0
+var _last_stand_until: int = 0
+const RAIN_DAMAGE: float = 6.0
+const REPAIR_AMOUNT: int = 30
+const REINFORCEMENT_COUNT: int = 2
+## Emitted for each step of the collapse ending, so the UI can show text and fades (SVTLW-84).
+signal ending_step(step: Dictionary)
 ## Number of screen shakes started, for tests.
 var shake_count: int = 0
 var _shake_strength: float = 0.0
@@ -141,12 +155,61 @@ func upgrade_building(building_id: String) -> bool:
 ## Starts the next wave from the catalog. Returns false if one is already running.
 func start_wave() -> bool:
 	ensure_ready()
+	# Wave 1000 is the final Overseer battle, not a normal wave (SVTLW-83).
+	if FinalBattle.is_final_wave(waves.current_wave + 1):
+		return final_battle.begin()
 	return waves.start_next_wave()
 
 
 func recruit_archer(at: Vector2) -> Archer:
 	ensure_ready()
 	return units.recruit("archer", at)
+
+
+## Active abilities (SVTLW-64). Returns false when locked, on cooldown or refused.
+func use_ability(ability_id: String) -> bool:
+	ensure_ready()
+	var researched: Array = game_state.research.get("researched", [])
+	if not abilities.use(ability_id, _tick_index, researched):
+		return false
+	match ability_id:
+		Abilities.RAIN_OF_ARROWS:
+			for enemy: Enemy in enemies.enemies.duplicate():
+				enemies.damage_enemy(enemy, RAIN_DAMAGE)
+		Abilities.EMERGENCY_REPAIR:
+			game_state.repair_wall(REPAIR_AMOUNT)
+		Abilities.REINFORCEMENT:
+			for i: int in range(REINFORCEMENT_COUNT):
+				units.recruit("archer", SLOT_POSITIONS[0] + Vector2(20.0 * i, 0.0))
+		Abilities.LAST_STAND:
+			_last_stand_until = _tick_index + Abilities.LAST_STAND_TICKS
+	_sound("ability")
+	return true
+
+
+func _last_stand_active() -> bool:
+	return _tick_index < _last_stand_until
+
+
+## Spawns The Abomination (SVTLW-66). Returns the enemy, or null if it is already on the field.
+func spawn_boss() -> Enemy:
+	ensure_ready()
+	if _boss_enemy != null and is_instance_valid(_boss_enemy) and _boss_enemy.alive:
+		return null
+	_boss_enemy = enemies.spawn(AbominationPhases.ENEMY_ID)
+	return _boss_enemy
+
+
+## Start Region 1's final objectives (SVTLW-65): the caller reports progress through the battlefield.
+func region_objectives() -> CampaignObjectives:
+	ensure_ready()
+	return objectives
+
+
+## The canonical ending sequence (SVTLW-84). Read its steps through ending_step.
+func ending_sequence() -> EndingSequence:
+	ensure_ready()
+	return ending
 
 
 ## Advances the battlefield by whole ticks. The real clock calls this on each tick too.
@@ -171,6 +234,8 @@ func _build_systems() -> void:
 		load("res://resources/enemies/armoured_brute.tres"),
 		load("res://resources/enemies/climber.tres"),
 		load("res://resources/enemies/shield_bearer.tres"),
+		load("res://resources/enemies/overlord.tres"),
+		load("res://resources/enemies/abomination.tres"),
 	]
 	add_child(enemies)
 
@@ -255,12 +320,14 @@ func _connect_systems() -> void:
 	waves.wave_completed.connect(_on_wave_completed)
 	enemies.enemy_removed.connect(func(_e: Enemy) -> void: waves.report_enemy_removed())
 	enemies.wall_attacked.connect(func(damage: float) -> void:
-		wall.attack(damage)
+		if not _last_stand_active():
+			wall.attack(damage)
 		_sound("wall_impact")
 		shake(clampf(damage, 1.0, 6.0)))
 	# Climbers ignore wall armour (SVTLW-57), so their damage goes straight through.
 	enemies.wall_attacked_unarmoured.connect(func(damage: float) -> void:
-		wall.attack_unarmoured(damage)
+		if not _last_stand_active():
+			wall.attack_unarmoured(damage)
 		_sound("wall_impact")
 		shake(clampf(damage, 1.0, 6.0)))
 	constructions.construction_completed.connect(_on_construction_completed)
@@ -277,6 +344,9 @@ func _connect_systems() -> void:
 	_on_wall_state_changed(wall.current_state())
 	upgrades.effects_changed.connect(_apply_upgrade_effects)
 	_apply_upgrade_effects()
+	# Kills (health at zero) feed the objectives and the final battle. Enemies that reach the wall do not.
+	enemies.enemy_removed.connect(_on_enemy_removed_for_objectives)
+	waves.wave_completed.connect(_on_wave_completed_for_objectives)
 
 
 func _on_tick(tick_index: int) -> void:
@@ -287,8 +357,13 @@ func _on_tick(tick_index: int) -> void:
 	wall.on_tick(tick_index)
 	constructions.on_tick(tick_index)
 	production.on_tick(tick_index)
+	_tick_index = tick_index
 	for structure: DefenceStructure in _defences.values():
+		# A slot switched off by the Overseer stops firing until it comes back (SVTLW-83).
+		if final_battle.active and final_battle.slot_disabled(structure.slot):
+			continue
 		structure.on_tick(tick_index, enemies.enemies)
+	_on_final_battle_tick()
 	effects.on_tick(tick_index)
 	_update_shake()
 	# Autosave runs after every system has finished this tick, never in the middle of one (SVTLW-45).
@@ -311,6 +386,47 @@ func _on_construction_completed(building_id: String, slot: int) -> void:
 		add_child(structure)
 		_defences[building_id] = structure
 	production.register(building_id)
+
+
+## Advances the final battle and the ending by one tick (SVTLW-83, SVTLW-84).
+func _on_final_battle_tick() -> void:
+	if final_battle.active:
+		for event: String in final_battle.on_tick(SLOT_POSITIONS.size()):
+			if event == "overlord":
+				enemies.spawn(FinalBattle.OVERLORD_ID)
+	if final_battle.victory and not ending.is_playing() and not ending.is_finished():
+		ending.start(game_state.has_flag(EndingSequence.FLAG_CANONICAL))
+	if ending.is_playing():
+		var finished: bool = ending.on_tick()
+		ending_step.emit(ending.current_step())
+		if finished:
+			game_state.set_flag(EndingSequence.FLAG_CANONICAL, true)
+			save_now()
+
+
+## Kills feed the objectives, the final battle and the Abomination (SVTLW-65, 66, 83).
+func _on_enemy_removed_for_objectives(enemy: Enemy) -> void:
+	if enemy.health > 0.0:
+		return
+	var enemy_id: String = enemy.definition.enemy_id
+	objectives.record_kill(enemy_id)
+	final_battle.record_kill(enemy_id)
+	if enemy == _boss_enemy:
+		objectives.record_boss_defeated()
+		var gold: int = boss_phases.claim_reward(true)
+		if gold > 0:
+			game_state.add_gold(gold)
+			game_state.set_flag(AbominationPhases.FLAG_DEFEATED, true)
+	if objectives.completed():
+		var reward: int = objectives.claim_reward()
+		if reward > 0:
+			game_state.add_gold(reward)
+			game_state.set_flag(CampaignObjectives.FLAG_REGION_ONE, true)
+
+
+func _on_wave_completed_for_objectives(_wave_number: int) -> void:
+	var max_health: float = maxf(float(game_state.wall_max_health), 1.0)
+	objectives.record_wave_end(float(game_state.wall_health) / max_health)
 
 
 func _on_defence_fire(origin: Vector2, target: Enemy, damage: float) -> void:
@@ -382,6 +498,11 @@ func _on_unit_recruited(archer: Archer) -> void:
 
 func _on_projectile_hit(target: Enemy, damage: float) -> void:
 	if is_instance_valid(target):
+		# The Abomination's hide cuts light hits; heavy hits get through (SVTLW-66).
+		if target == _boss_enemy:
+			damage = AbominationPhases.hide_damage(damage)
+			if target.definition.max_health > 0.0:
+				boss_phases.update_phase(target.health / target.definition.max_health)
 		damage_numbers.show_hit(target.global_position, damage)
 		enemies.damage_enemy(target, damage)
 		effects.spawn_impact(effects.to_local(target.global_position))
