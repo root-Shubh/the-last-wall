@@ -8,10 +8,18 @@ signal wall_health_changed(health: int)
 ## Emitted for every successful spend (SVTLW-38). Refunds emit gold_refunded instead.
 signal gold_spent(amount: int, balance: int)
 signal gold_refunded(amount: int, balance: int)
+## Emitted whenever wood, stone or iron changes (SVTLW-56). Carries all three balances.
+signal materials_changed(wood: int, stone: int, iron: int)
+
+## Material ids accepted by the generic add/spend/can_afford path (SVTLW-56).
+const MATERIAL_IDS: Array[String] = ["wood", "stone", "iron"]
 
 const DEFAULT_WALL_MAX_HEALTH: int = 100
 
 var gold: int = 0
+var wood: int = 0
+var stone: int = 0
+var iron: int = 0
 var current_wave: int = 0
 var wall_max_health: int = DEFAULT_WALL_MAX_HEALTH
 var wall_health: int = DEFAULT_WALL_MAX_HEALTH
@@ -28,6 +36,9 @@ var flags: Dictionary = {}
 ## Restores every value to a new game.
 func reset() -> void:
 	gold = 0
+	wood = 0
+	stone = 0
+	iron = 0
 	current_wave = 0
 	wall_max_health = DEFAULT_WALL_MAX_HEALTH
 	wall_health = wall_max_health
@@ -35,6 +46,7 @@ func reset() -> void:
 	character_name = ""
 	flags.clear()
 	resources_changed.emit(gold)
+	_emit_materials()
 	wave_changed.emit(current_wave)
 	wall_health_changed.emit(wall_health)
 
@@ -72,6 +84,52 @@ func refund_gold(amount: int) -> void:
 	gold += amount
 	resources_changed.emit(gold)
 	gold_refunded.emit(amount, gold)
+
+
+## Balance of a material ("wood", "stone" or "iron"). Unknown ids return 0.
+func material_amount(material: String) -> int:
+	match material:
+		"wood":
+			return wood
+		"stone":
+			return stone
+		"iron":
+			return iron
+	return 0
+
+
+## Adds a material. Unknown ids and non-positive amounts change nothing.
+func add_material(material: String, amount: int) -> void:
+	if amount <= 0 or not MATERIAL_IDS.has(material):
+		return
+	_set_material(material, material_amount(material) + amount)
+
+
+func can_afford_material(material: String, cost: int) -> bool:
+	return MATERIAL_IDS.has(material) and cost >= 0 and material_amount(material) >= cost
+
+
+## Deducts a material only when the balance covers it. Returns false and changes nothing otherwise.
+func spend_material(material: String, cost: int) -> bool:
+	if not can_afford_material(material, cost):
+		return false
+	_set_material(material, material_amount(material) - cost)
+	return true
+
+
+func _set_material(material: String, value: int) -> void:
+	match material:
+		"wood":
+			wood = value
+		"stone":
+			stone = value
+		"iron":
+			iron = value
+	_emit_materials()
+
+
+func _emit_materials() -> void:
+	materials_changed.emit(wood, stone, iron)
 
 
 ## Raises or lowers the maximum wall health. Current health moves by the same amount (SVTLW-39).
@@ -125,6 +183,9 @@ func set_character(id: String, display_name: String) -> bool:
 func to_dict() -> Dictionary:
 	return {
 		"gold": gold,
+		"wood": wood,
+		"stone": stone,
+		"iron": iron,
 		"wave": current_wave,
 		"wall_health": wall_health,
 		"wall_max_health": wall_max_health,
@@ -158,11 +219,21 @@ func from_dict(data: Dictionary) -> bool:
 	character_name = new_name if new_name.length() <= NAME_MAX_LENGTH else ""
 	flags = new_flags
 
+	# Materials (SVTLW-56) are optional so saves from before the economy story load with zeros.
+	var new_materials: Dictionary = {}
+	for material: String in MATERIAL_IDS:
+		var value: Variant = data.get(material, 0)
+		new_materials[material] = int(value) if _is_non_negative_whole(value) else 0
+
 	gold = int(data["gold"])
+	wood = new_materials["wood"]
+	stone = new_materials["stone"]
+	iron = new_materials["iron"]
 	current_wave = int(data["wave"])
 	wall_max_health = new_max
 	wall_health = new_health
 	resources_changed.emit(gold)
+	_emit_materials()
 	wave_changed.emit(current_wave)
 	wall_health_changed.emit(wall_health)
 	return true

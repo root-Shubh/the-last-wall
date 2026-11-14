@@ -5,6 +5,10 @@ extends Resource
 @export var building_id: String = ""
 @export var display_name: String = ""
 @export var build_cost: int = 50
+## Optional material costs (SVTLW-56). All are checked before any cost is spent.
+@export var wood_cost: int = 0
+@export var stone_cost: int = 0
+@export var iron_cost: int = 0
 @export var build_time_ticks: int = 50
 ## Highest upgrade level (SVTLW-54). 0 means the default of 3. Construction itself does not read it.
 @export var max_level: int = 1

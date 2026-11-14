@@ -23,7 +23,7 @@ func _initialize() -> void:
 	_check(hud._wall_label.text == "Wall 100 / 100", "wall label shows health and max")
 	state.damage_wall(20)
 	_check(hud._wall_label.text == "Wall 80 / 100", "wall label updates on damage")
-	_check(hud._wood_label.text.contains("--") and hud._research_label.text.contains("--"), "unbuilt resources show placeholders")
+	_check(hud._wood_label.text == "Wood 0" and hud._research_label.text.contains("--"), "wood shows its balance and research still shows a placeholder")
 	field.start_wave()
 	_check(hud._wave_label.text == "Wave 1", "wave label shows the running wave")
 

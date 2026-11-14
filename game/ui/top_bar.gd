@@ -1,6 +1,6 @@
 ## Top bar HUD (SVTLW-28). Shows gold, wood, stone, iron, research points, current wave,
 ## wall health and game speed, and provides pause and 1x, 2x, 3x controls.
-## Wood, stone, iron and research are placeholders until M2 adds their production.
+## Wood, stone and iron follow GameState (SVTLW-56). Research is still a placeholder until M2.
 class_name TopBar
 extends CanvasLayer
 
@@ -30,9 +30,9 @@ func build() -> void:
 	add_child(bar)
 
 	_gold_label = _label(bar, "Gold 0")
-	_wood_label = _label(bar, "Wood %s" % PLACEHOLDER)
-	_stone_label = _label(bar, "Stone %s" % PLACEHOLDER)
-	_iron_label = _label(bar, "Iron %s" % PLACEHOLDER)
+	_wood_label = _label(bar, "Wood 0")
+	_stone_label = _label(bar, "Stone 0")
+	_iron_label = _label(bar, "Iron 0")
 	_research_label = _label(bar, "Research %s" % PLACEHOLDER)
 	_wave_label = _label(bar, "Wave 0")
 	_wall_label = _label(bar, "Wall --")
@@ -51,10 +51,17 @@ func bind(game_state: Node, clock: SimulationClock, waves: WaveManager, wall: Wa
 	game_state.resources_changed.connect(func(gold: int) -> void: _gold_label.text = "Gold %d" % gold)
 	game_state.wall_health_changed.connect(func(health: int) -> void:
 		_wall_label.text = "Wall %d / %d" % [health, game_state.wall_max_health])
+	game_state.materials_changed.connect(func(wood: int, stone: int, iron: int) -> void:
+		_wood_label.text = "Wood %d" % wood
+		_stone_label.text = "Stone %d" % stone
+		_iron_label.text = "Iron %d" % iron)
 	waves.wave_started.connect(func(number: int) -> void: _wave_label.text = "Wave %d" % number)
 	clock.speed_changed.connect(func(_s: int) -> void: _refresh_speed())
 	clock.paused_changed.connect(func(_p: bool) -> void: _refresh_speed())
 	_gold_label.text = "Gold %d" % game_state.gold
+	_wood_label.text = "Wood %d" % game_state.wood
+	_stone_label.text = "Stone %d" % game_state.stone
+	_iron_label.text = "Iron %d" % game_state.iron
 	_wall_label.text = "Wall %d / %d" % [game_state.wall_health, game_state.wall_max_health]
 	_refresh_speed()
 
