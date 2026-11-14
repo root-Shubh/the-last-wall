@@ -12,3 +12,4 @@ armour = 0.0
 move_speed = 70.0
 wall_damage = 2.0
 attack_interval_ticks = 8
+gold_reward = 1

@@ -13,3 +13,5 @@ extends Resource
 @export var move_speed: float = 30.0
 @export var wall_damage: float = 3.0
 @export_range(1, 1000) var attack_interval_ticks: int = 10
+## Gold granted when this enemy is killed (SVTLW-27).
+@export var gold_reward: int = 1
