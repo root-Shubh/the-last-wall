@@ -39,14 +39,13 @@ func _draw_wall() -> void:
 	var height: float = FLOOR_BASE + FLOOR_STEP * float(tier - 1)
 	var top: float = GROUND_Y - height
 	var colour: Color = Color(0.5, 0.38, 0.26).lerp(Color(0.62, 0.62, 0.66), float(tier - 1) / 6.0)
-	draw_rect(Rect2(WALL_LEFT, top, WALL_WIDTH, height), colour)
+	draw_texture_rect(SpriteArt.texture("wall_stone"), Rect2(WALL_LEFT, top, WALL_WIDTH, height), true, colour)
 	# Each floor after the first is a band with a crenellated top.
 	for floor_index: int in range(1, tier):
 		var y: float = GROUND_Y - FLOOR_STEP * float(floor_index)
 		draw_line(Vector2(WALL_LEFT, y), Vector2(WALL_LEFT + WALL_WIDTH, y), colour.darkened(0.35), 2.0)
 	for merlon: int in range(4):
 		draw_rect(Rect2(WALL_LEFT + 4.0 + float(merlon) * 27.0, top - 8.0, 16.0, 8.0), colour)
-	draw_rect(Rect2(WALL_LEFT, top, WALL_WIDTH, height), colour.darkened(0.4), false, 2.0)
 
 
 ## The player's commander stands on top of the wall (SVTLW-42, the chosen character).
@@ -54,10 +53,7 @@ func _draw_commander() -> void:
 	var tier: int = clampi(int(field.game_state.wall_tier), 1, 7)
 	var top: float = GROUND_Y - (FLOOR_BASE + FLOOR_STEP * float(tier - 1)) - 8.0
 	var x: float = WALL_LEFT + WALL_WIDTH * 0.5
-	var cloak: Color = Color(0.2, 0.3, 0.45)
-	draw_rect(Rect2(x - 7.0, top - 22.0, 14.0, 22.0), cloak)
-	draw_circle(Vector2(x, top - 27.0), 6.0, Color(0.85, 0.7, 0.55))
-	draw_rect(Rect2(x - 8.0, top - 33.0, 16.0, 4.0), Color(0.25, 0.2, 0.15))
+	draw_texture_rect(SpriteArt.texture("commander"), Rect2(x - 12.0, top - 26.0, 24.0, 24.0), false)
 
 
 ## Production buildings and construction sites. Defence structures are drawn by their own node.
@@ -69,10 +65,8 @@ func _draw_buildings() -> void:
 			continue
 		var slot: int = int(entry["slot"])
 		var at: Vector2 = Battlefield.SLOT_POSITIONS[slot]
-		var colour: Color = BUILDING_COLOURS.get(building_id, Color(0.5, 0.5, 0.5))
 		var rect: Rect2 = Rect2(at - Vector2(SLOT_SIZE, SLOT_SIZE) * 0.5, Vector2(SLOT_SIZE, SLOT_SIZE))
-		draw_rect(rect, colour)
-		draw_rect(rect, colour.darkened(0.4), false, 2.0)
+		draw_texture_rect(SpriteArt.texture(building_id), rect, false)
 	for site: Dictionary in field.constructions.active:
 		var at: Vector2 = Battlefield.SLOT_POSITIONS[int(site["slot"])]
 		var rect: Rect2 = Rect2(at - Vector2(SLOT_SIZE, SLOT_SIZE) * 0.5, Vector2(SLOT_SIZE, SLOT_SIZE))

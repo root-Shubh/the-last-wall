@@ -128,8 +128,9 @@ func take_damage(amount: float) -> void:
 
 ## Visual: a figure with a bow line, so recruits are visible on the wall (SVTLW-103).
 func _draw() -> void:
-	draw_rect(Rect2(Vector2(-6.0, -10.0), Vector2(12.0, 18.0)), Color(0.85, 0.85, 0.6))
-	draw_line(Vector2(6.0, -8.0), Vector2(10.0, 0.0), Color(0.5, 0.35, 0.2), 2.0)
+	var art: Texture2D = SpriteArt.texture("archer")
+	if art != null:
+		draw_texture_rect(art, Rect2(Vector2(-16.0, -28.0), Vector2(32.0, 32.0)), false)
 
 
 func _process(_delta: float) -> void:

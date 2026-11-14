@@ -66,6 +66,13 @@ func take_damage(amount: float) -> void:
 
 
 ## Visual: a block coloured by role, with a health bar above it. Redrawn every frame so damage shows (SVTLW-103).
+const ROLE_SPRITES: Dictionary = {
+	"pressure": "enemy_infantry",
+	"swarm": "enemy_runner",
+	"wall_breaker": "enemy_brute",
+	"shield_bearer": "enemy_shield_bearer",
+	"climber": "enemy_climber",
+}
 const ROLE_COLOURS: Dictionary = {
 	"pressure": Color(0.75, 0.55, 0.35),
 	"swarm": Color(0.8, 0.8, 0.4),
@@ -78,11 +85,12 @@ const ROLE_COLOURS: Dictionary = {
 func _draw() -> void:
 	if definition == null or not alive:
 		return
-	var colour: Color = ROLE_COLOURS.get(definition.role, Color(0.7, 0.7, 0.7))
-	draw_rect(Rect2(Vector2(-8.0, -8.0), Vector2(16.0, 16.0)), colour)
+	var art: Texture2D = SpriteArt.texture(ROLE_SPRITES.get(definition.role, "enemy_infantry"))
+	if art != null:
+		draw_texture_rect(art, Rect2(Vector2(-16.0, -26.0), Vector2(32.0, 32.0)), false)
 	var fraction: float = clampf(health / maxf(definition.max_health, 1.0), 0.0, 1.0)
-	draw_rect(Rect2(Vector2(-9.0, -14.0), Vector2(18.0, 3.0)), Color(0.15, 0.05, 0.05))
-	draw_rect(Rect2(Vector2(-9.0, -14.0), Vector2(18.0 * fraction, 3.0)), Color(0.3, 0.9, 0.3))
+	draw_rect(Rect2(Vector2(-16.0, -30.0), Vector2(32.0, 3.0)), Color(0.15, 0.05, 0.05))
+	draw_rect(Rect2(Vector2(-16.0, -30.0), Vector2(32.0 * fraction, 3.0)), Color(0.3, 0.9, 0.3))
 
 
 func _process(_delta: float) -> void:
