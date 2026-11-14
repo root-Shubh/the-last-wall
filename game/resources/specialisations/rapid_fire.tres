@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SpecialisationDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/specialisation_definition.gd" id="1_spec"]
+
+[resource]
+script = ExtResource("1_spec")
+specialisation_id = "rapid_fire"
+display_name = "Rapid fire"
+unit_id = "archer"
+damage_multiplier = 0.8
+attack_speed_multiplier = 1.5
+range_multiplier = 1.0
+armour_penetration_bonus = 0.0
+weakness = "Each arrow hits 20 percent softer, so it is weak against armour."
+damage_type_note = ""

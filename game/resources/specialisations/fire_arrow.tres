@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SpecialisationDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/specialisation_definition.gd" id="1_spec"]
+
+[resource]
+script = ExtResource("1_spec")
+specialisation_id = "fire_arrow"
+display_name = "Fire arrow"
+unit_id = "archer"
+damage_multiplier = 1.4
+attack_speed_multiplier = 0.75
+range_multiplier = 1.0
+armour_penetration_bonus = 0.0
+weakness = "Slower draw, and no help against armour. The fire tag has no effect yet."
+damage_type_note = "fire"
