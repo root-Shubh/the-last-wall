@@ -29,6 +29,20 @@ func _rebuild_index() -> void:
 ## Upgrade multipliers applied to every archer, present and future (SVTLW-39).
 var archer_damage_multiplier: float = 1.0
 var archer_speed_multiplier: float = 1.0
+## Targeting applied to new recruits and to archers when no single unit is named (SVTLW-58).
+var default_targeting_mode: int = Targeting.Mode.CLOSEST
+var default_priority_id: String = ""
+
+
+## Sets targeting for one archer when unit is given, otherwise for every archer and future recruits.
+func set_targeting_mode(mode: int, priority_id: String = "", unit: Archer = null) -> void:
+	if unit != null:
+		unit.set_targeting_mode(mode, priority_id)
+		return
+	default_targeting_mode = mode
+	default_priority_id = priority_id
+	for archer: Archer in archers:
+		archer.set_targeting_mode(mode, priority_id)
 
 
 func set_archer_multipliers(damage: float, speed: float) -> void:
@@ -80,6 +94,7 @@ func _spawn(definition: UnitDefinition, at: Vector2) -> Archer:
 	archer.setup(definition, at, _rng)
 	archer.damage_multiplier = archer_damage_multiplier
 	archer.attack_speed_multiplier = archer_speed_multiplier
+	archer.set_targeting_mode(default_targeting_mode, default_priority_id)
 	archer.died.connect(_on_archer_died)
 	archers.append(archer)
 	unit_recruited.emit(archer)
