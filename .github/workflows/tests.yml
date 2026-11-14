@@ -1,0 +1,29 @@
+name: tests
+
+on:
+  pull_request:
+    branches: [develop, qa, staging, release, master]
+  push:
+    branches: [develop, qa, staging, release, master]
+
+jobs:
+  headless:
+    runs-on: ubuntu-latest
+    env:
+      GODOT_VERSION: "4.7.2"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Godot ${{ env.GODOT_VERSION }}
+        run: |
+          curl -fsSL -o godot.zip \
+            "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q godot.zip
+          sudo mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" /usr/local/bin/godot
+          chmod +x /usr/local/bin/godot
+          godot --version
+
+      - name: Run headless test suites
+        env:
+          GODOT: godot
+        run: bash tools/run_tests.sh
