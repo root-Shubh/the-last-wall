@@ -17,3 +17,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for commit and pull request rules.
 - `tests/` automated tests
 - `assets/` art, audio and credits
 - `tools/` balance simulator and build helpers
+
+## Licence
+
+All rights reserved. See [LICENSE](LICENSE) for the terms of use.
