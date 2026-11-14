@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="EnemyDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/enemy_definition.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+enemy_id = "calculation_guardian"
+display_name = "Calculation Guardian"
+role = "calculation_guardian"
+max_health = 80.0
+armour = 3.0
+move_speed = 14.0
+wall_damage = 6.0
+attack_interval_ticks = 14
+gold_reward = 7
+immune_above_hit = 200.0
