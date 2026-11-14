@@ -20,8 +20,22 @@ var upgrades: UpgradeManager
 var hud: TopBar
 var settings: SettingsStore
 var damage_numbers: DamageNumbers
+var constructions: ConstructionManager
+var production: ProductionManager
+var effects: EffectPool
+var context_panel: ContextPanel
+## Fixed build slots on the fortress, indexed by slot number (SVTLW-100).
+const SLOT_POSITIONS: Array[Vector2] = [Vector2(130.0, 170.0), Vector2(130.0, 540.0), Vector2(60.0, 360.0), Vector2(60.0, 250.0)]
+## Gold per upgrade level: upgrading from level n costs UPGRADE_GOLD_PER_LEVEL * n.
+const UPGRADE_GOLD_PER_LEVEL: int = 25
+## Radius of the explosion raised by a defence structure's shot.
+const EXPLOSION_RADIUS: float = 40.0
+## Built defence structures by building id. A building can only be built once.
+var _defences: Dictionary = {}
 ## Number of screen shakes started, for tests.
 var shake_count: int = 0
+var _shake_strength: float = 0.0
+var _shake_tick: int = 0
 var _built: bool = false
 
 
@@ -54,17 +68,74 @@ func ensure_ready() -> void:
 	hud = TopBar.new()
 	add_child(hud)
 	hud.bind(game_state, clock, waves, wall)
+	hud.bind_production(production)
+	context_panel.select_recruitment()
 
 
 ## Shakes the battlefield briefly. Does nothing when screen shake is turned off (SVTLW-37).
+## The offset decays over ticks in _on_tick, through ScreenShake.shake_offset (SVTLW-100).
 func shake(strength: float) -> void:
 	ensure_ready()
 	if not settings.screen_shake_enabled:
 		return
 	shake_count += 1
-	var tween: Tween = create_tween()
-	tween.tween_property(self, "position", Vector2(strength, -strength * 0.5), 0.05)
-	tween.tween_property(self, "position", Vector2.ZERO, 0.1)
+	_shake_strength = strength
+	_shake_tick = 0
+
+
+func _update_shake() -> void:
+	if _shake_strength <= 0.0:
+		return
+	position = ScreenShake.shake_offset(_shake_strength, _shake_tick, settings.screen_shake_enabled)
+	_shake_tick += 1
+	if _shake_tick >= ScreenShake.DECAY_TICKS:
+		_shake_strength = 0.0
+		position = Vector2.ZERO
+
+
+## Starts a build on a fixed slot. Returns false and spends nothing when it is refused (SVTLW-100).
+func build(building_id: String, slot: int) -> bool:
+	ensure_ready()
+	if slot < 0 or slot >= SLOT_POSITIONS.size():
+		return false
+	return constructions.start_construction(building_id, slot)
+
+
+## First fixed slot with nothing built or building on it. -1 when every slot is taken.
+func free_slot() -> int:
+	ensure_ready()
+	for slot: int in range(SLOT_POSITIONS.size()):
+		if constructions.is_slot_free(slot):
+			return slot
+	return -1
+
+
+## Buys one level for a built defence structure or a registered production building (SVTLW-100).
+## Refuses with no spend when the building is at max level or not built.
+func upgrade_building(building_id: String) -> bool:
+	ensure_ready()
+	var structure: DefenceStructure = _defences.get(building_id, null)
+	var level: int = 0
+	var max_level: int = 0
+	if structure != null:
+		level = structure.level
+		max_level = structure.max_level
+	elif production.is_registered(building_id):
+		level = production.level_of(building_id)
+		max_level = maxi(production.definition(building_id).max_level, 1)
+	else:
+		return false
+	if level >= max_level:
+		return false
+	var cost: int = UPGRADE_GOLD_PER_LEVEL * level
+	if not game_state.spend_gold(cost):
+		return false
+	var done: bool = structure.upgrade() if structure != null else production.upgrade(building_id)
+	if not done:
+		game_state.refund_gold(cost)
+		return false
+	_sound("upgrade")
+	return true
 
 
 ## Starts the next wave from the catalog. Returns false if one is already running.
@@ -90,16 +161,37 @@ func _build_systems() -> void:
 	waves.catalog = load("res://resources/waves/m1_catalog.tres")
 	add_child(waves)
 
+	waves.generator = WaveGenerator.new()
+	waves.generator.stage_table = load("res://resources/waves/wave_stages.tres")
+
 	enemies = EnemyManager.new()
 	enemies.definitions = [
 		load("res://resources/enemies/undead_infantry.tres"),
 		load("res://resources/enemies/runner.tres"),
 		load("res://resources/enemies/armoured_brute.tres"),
+		load("res://resources/enemies/climber.tres"),
+		load("res://resources/enemies/shield_bearer.tres"),
 	]
 	add_child(enemies)
 
 	projectiles = ProjectilePool.new()
 	add_child(projectiles)
+
+	effects = EffectPool.new()
+	add_child(effects)
+
+	var building_defs: Array[BuildingDefinition] = []
+	for id: String in ["tower", "archer_platform", "lumber_mill", "quarry", "iron_mine"]:
+		building_defs.append(load("res://resources/buildings/%s.tres" % id))
+	constructions = ConstructionManager.new()
+	constructions.definitions = building_defs
+	constructions.state = game_state
+	add_child(constructions)
+
+	production = ProductionManager.new()
+	production.definitions = building_defs
+	production.state = game_state
+	add_child(production)
 
 	units = UnitManager.new()
 	units.unit_definitions = [
@@ -132,6 +224,10 @@ func _build_systems() -> void:
 	upgrades.state = game_state
 	add_child(upgrades)
 
+	context_panel = ContextPanel.new()
+	add_child(context_panel)
+	context_panel.bind(units, game_state, constructions)
+
 
 ## Base wall health before upgrades (SVTLW-39).
 const BASE_WALL_MAX_HEALTH: int = 100
@@ -162,6 +258,14 @@ func _connect_systems() -> void:
 		wall.attack(damage)
 		_sound("wall_impact")
 		shake(clampf(damage, 1.0, 6.0)))
+	# Climbers ignore wall armour (SVTLW-57), so their damage goes straight through.
+	enemies.wall_attacked_unarmoured.connect(func(damage: float) -> void:
+		wall.attack_unarmoured(damage)
+		_sound("wall_impact")
+		shake(clampf(damage, 1.0, 6.0)))
+	constructions.construction_completed.connect(_on_construction_completed)
+	projectiles.explosion_requested.connect(func(at: Vector2) -> void:
+		effects.spawn_explosion(effects.to_local(at), EXPLOSION_RADIUS))
 	waves.wave_started.connect(func(_n: int) -> void: _sound("wave_start"))
 	waves.wave_completed.connect(func(_n: int) -> void: _sound("wave_end"))
 	rewards.reward_granted.connect(func(_a: int, _r: String) -> void: _sound("reward"))
@@ -181,6 +285,12 @@ func _on_tick(tick_index: int) -> void:
 	units.on_tick(tick_index, enemies.enemies)
 	projectiles.on_tick(tick_index)
 	wall.on_tick(tick_index)
+	constructions.on_tick(tick_index)
+	production.on_tick(tick_index)
+	for structure: DefenceStructure in _defences.values():
+		structure.on_tick(tick_index, enemies.enemies)
+	effects.on_tick(tick_index)
+	_update_shake()
 	# Autosave runs after every system has finished this tick, never in the middle of one (SVTLW-45).
 	if _autosave_pending:
 		_autosave_pending = false
@@ -189,6 +299,23 @@ func _on_tick(tick_index: int) -> void:
 
 func _on_wave_completed(_wave_number: int) -> void:
 	_autosave_pending = true
+
+
+## A finished tower or archer platform gets a DefenceStructure on its slot. A production building is registered (SVTLW-100).
+func _on_construction_completed(building_id: String, slot: int) -> void:
+	var data: BuildingDefinition = constructions.definition(building_id)
+	if data.attack_damage > 0.0:
+		var structure: DefenceStructure = DefenceStructure.new()
+		structure.setup(data, slot, SLOT_POSITIONS[slot])
+		structure.fire_requested.connect(_on_defence_fire)
+		add_child(structure)
+		_defences[building_id] = structure
+	production.register(building_id)
+
+
+func _on_defence_fire(origin: Vector2, target: Enemy, damage: float) -> void:
+	projectiles.fire(origin, target, damage, true)
+	_sound("shot")
 
 
 ## Save and load (SVTLW-44, SVTLW-45). Game state is saved by SaveManager. The battlefield adds
@@ -238,6 +365,7 @@ func restore_from_save() -> bool:
 	for entry: Variant in saved.get("archers", []):
 		if typeof(entry) == TYPE_ARRAY and entry.size() == 2:
 			units.restore_unit("archer", Vector2(float(entry[0]), float(entry[1])))
+	production.load_from_state()
 	return true
 
 
@@ -255,7 +383,8 @@ func _on_unit_recruited(archer: Archer) -> void:
 func _on_projectile_hit(target: Enemy, damage: float) -> void:
 	if is_instance_valid(target):
 		damage_numbers.show_hit(target.global_position, damage)
-		target.take_damage(damage)
+		enemies.damage_enemy(target, damage)
+		effects.spawn_impact(effects.to_local(target.global_position))
 		_sound("hit")
 
 

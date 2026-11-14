@@ -58,6 +58,13 @@ func attack(amount: float) -> void:
 	state.damage_wall(roundi(dealt))
 
 
+## Applies an attack that ignores armour, such as a climber's (SVTLW-57). Raw damage goes straight to health.
+func attack_unarmoured(amount: float) -> void:
+	if _destroyed or state == null:
+		return
+	state.damage_wall(roundi(maxf(amount, 0.0)))
+
+
 ## Repair runs on simulation ticks so pausing also pauses repair.
 func on_tick(_tick_index: int) -> void:
 	if _destroyed or state == null or repair_per_second <= 0.0:
