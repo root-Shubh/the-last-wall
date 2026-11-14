@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ChallengeDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/challenge_definition.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+challenge_id = "no_archers"
+display_name = "No Archers"
+restriction = "no_archers"
+extra_wave_multiplier = 1.25
+enemy_ids = PackedStringArray("undead_infantry", "runner", "shield_bearer")

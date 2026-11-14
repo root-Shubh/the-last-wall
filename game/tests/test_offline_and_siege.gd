@@ -16,6 +16,7 @@ func _initialize() -> void:
 	_test_offline_summary()
 	_test_offline_game_state_defaults()
 	_test_endless_siege()
+	_test_challenges()
 	print("RESULT: %s (%d failure(s))" % ["PASS" if _failures == 0 else "FAIL", _failures])
 	quit(0 if _failures == 0 else 1)
 
@@ -112,3 +113,23 @@ func _test_endless_siege() -> void:
 			bad += 1
 	_check(bad == 0, "waves 151 to 1200 all have valid data")
 	_check(siege.definition_for(100001) == null, "waves past the Endless stage end (no data error)")
+
+
+func _test_challenges() -> void:
+	var rotation: ChallengeRotation = ChallengeRotation.load_from_directory()
+	_check(rotation.count() >= 3, "at least three challenges load from data")
+	var enemy_ok: bool = true
+	var known: Array[String] = ["undead_infantry", "runner", "climber", "shield_bearer", "armoured_brute"]
+	for challenge: ChallengeDefinition in rotation.challenges:
+		if challenge.challenge_id == "" or challenge.restriction == "" or challenge.enemy_ids.is_empty():
+			enemy_ok = false
+		for enemy: String in challenge.enemy_ids:
+			enemy_ok = enemy_ok and known.has(enemy)
+	_check(enemy_ok, "every challenge has an id, restriction and known enemy ids")
+	var week_0: ChallengeDefinition = rotation.active_for_week(0)
+	var week_1: ChallengeDefinition = rotation.active_for_week(1)
+	_check(week_0 != null and week_1 != null and week_0.challenge_id != week_1.challenge_id, "consecutive weeks get different challenges")
+	var wrap: ChallengeDefinition = rotation.active_for_week(rotation.count())
+	_check(wrap == week_0, "the rotation wraps after the last challenge")
+	_check(rotation.active_for_week(-1) == rotation.active_for_week(rotation.count() - 1), "negative weeks wrap to a valid challenge")
+	_check(ChallengeRotation.new().active_for_week(3) == null, "an empty rotation returns null")

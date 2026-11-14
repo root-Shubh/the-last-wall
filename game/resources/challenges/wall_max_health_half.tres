@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ChallengeDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/challenge_definition.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+challenge_id = "wall_max_health_half"
+display_name = "Cracked Wall"
+restriction = "wall_max_health_half"
+extra_wave_multiplier = 1.5
+enemy_ids = PackedStringArray("runner", "climber", "undead_infantry")
