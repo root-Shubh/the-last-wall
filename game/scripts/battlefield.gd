@@ -17,6 +17,10 @@ var projectiles: ProjectilePool
 var rewards: RewardTracker
 var wall: WallManager
 var hud: TopBar
+var settings: SettingsStore
+var damage_numbers: DamageNumbers
+## Number of screen shakes started, for tests.
+var shake_count: int = 0
 var _built: bool = false
 
 
@@ -33,11 +37,27 @@ func ensure_ready() -> void:
 	clock = get_node("SimulationClock")
 	if game_state == null:
 		game_state = get_node_or_null("/root/GameState")
+	settings = SettingsStore.new()
+	settings.load_from()
+	damage_numbers = DamageNumbers.new()
+	damage_numbers.settings = settings
+	add_child(damage_numbers)
 	_build_systems()
 	_connect_systems()
 	hud = TopBar.new()
 	add_child(hud)
 	hud.bind(game_state, clock, waves, wall)
+
+
+## Shakes the battlefield briefly. Does nothing when screen shake is turned off (SVTLW-37).
+func shake(strength: float) -> void:
+	ensure_ready()
+	if not settings.screen_shake_enabled:
+		return
+	shake_count += 1
+	var tween: Tween = create_tween()
+	tween.tween_property(self, "position", Vector2(strength, -strength * 0.5), 0.05)
+	tween.tween_property(self, "position", Vector2.ZERO, 0.1)
 
 
 ## Starts the next wave from the catalog. Returns false if one is already running.
@@ -93,7 +113,9 @@ func _connect_systems() -> void:
 	clock.tick_advanced.connect(_on_tick)
 	waves.enemy_spawn_requested.connect(func(id: String) -> void: enemies.spawn(id))
 	enemies.enemy_removed.connect(func(_e: Enemy) -> void: waves.report_enemy_removed())
-	enemies.wall_attacked.connect(func(damage: float) -> void: wall.attack(damage))
+	enemies.wall_attacked.connect(func(damage: float) -> void:
+		wall.attack(damage)
+		shake(clampf(damage, 1.0, 6.0)))
 	units.unit_recruited.connect(_on_unit_recruited)
 	projectiles.projectile_hit.connect(_on_projectile_hit)
 	wall.wall_destroyed.connect(_on_wall_destroyed)
@@ -116,6 +138,7 @@ func _on_unit_recruited(archer: Archer) -> void:
 
 func _on_projectile_hit(target: Enemy, damage: float) -> void:
 	if is_instance_valid(target):
+		damage_numbers.show_hit(target.global_position, damage)
 		target.take_damage(damage)
 
 
