@@ -5,6 +5,9 @@ extends Node
 signal resources_changed(gold: int)
 signal wave_changed(wave: int)
 signal wall_health_changed(health: int)
+## Emitted for every successful spend (SVTLW-38). Refunds emit gold_refunded instead.
+signal gold_spent(amount: int, balance: int)
+signal gold_refunded(amount: int, balance: int)
 
 const DEFAULT_WALL_MAX_HEALTH: int = 100
 
@@ -47,7 +50,27 @@ func spend_gold(cost: int) -> bool:
 		return false
 	gold -= cost
 	resources_changed.emit(gold)
+	gold_spent.emit(cost, gold)
 	return true
+
+
+## Returns gold to the balance, for example when a purchase is cancelled. Ignores zero or negative amounts.
+func refund_gold(amount: int) -> void:
+	if amount <= 0:
+		return
+	gold += amount
+	resources_changed.emit(gold)
+	gold_refunded.emit(amount, gold)
+
+
+## Raises or lowers the maximum wall health. Current health moves by the same amount (SVTLW-39).
+func set_wall_max_health(value: int) -> void:
+	if value <= 0:
+		return
+	var delta: int = value - wall_max_health
+	wall_max_health = value
+	wall_health = clampi(wall_health + delta, 0, wall_max_health)
+	wall_health_changed.emit(wall_health)
 
 
 func damage_wall(amount: int) -> void:

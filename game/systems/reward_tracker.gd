@@ -8,6 +8,9 @@ signal reward_granted(amount: int, reason: String)
 ## Survival bonus per cleared wave is this value times the wave number.
 @export var survival_bonus_per_wave: int = 10
 
+## Extra gold per kill from upgrades (SVTLW-39). Zero until the upgrade is bought.
+@export var kill_gold_bonus: int = 0
+
 var kills: int = 0
 var gold_from_kills: int = 0
 var gold_from_waves: int = 0
@@ -29,7 +32,7 @@ func reset() -> void:
 
 func _on_enemy_removed(enemy: Enemy) -> void:
 	kills += 1
-	var amount: int = enemy.definition.gold_reward
+	var amount: int = enemy.definition.gold_reward + kill_gold_bonus
 	if amount <= 0:
 		return
 	gold_from_kills += amount

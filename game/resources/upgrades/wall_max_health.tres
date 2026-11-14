@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="UpgradeDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/upgrade_definition.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+upgrade_id = "wall_max_health"
+display_name = "Thicker Stone"
+effect = "wall_max_health"
+effect_per_level = 20.0
+base_cost = 25
+cost_multiplier = 1.4
+max_level = 10
+prerequisite_id = ""

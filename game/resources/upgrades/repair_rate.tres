@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="UpgradeDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/upgrade_definition.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+upgrade_id = "repair_rate"
+display_name = "Mortar Repairs"
+effect = "repair_rate"
+effect_per_level = 1.0
+base_cost = 40
+cost_multiplier = 1.5
+max_level = 5
+prerequisite_id = "wall_max_health"

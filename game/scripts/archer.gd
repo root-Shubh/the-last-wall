@@ -9,6 +9,9 @@ signal fire_requested(origin: Vector2, target: Enemy, damage: float)
 var definition: UnitDefinition
 var health: float = 0.0
 var alive: bool = false
+## Set from upgrades (SVTLW-39). 1.0 means no change.
+var damage_multiplier: float = 1.0
+var attack_speed_multiplier: float = 1.0
 var _ticks_since_shot: int = 0
 var _rng: RandomNumberGenerator = null
 
@@ -27,7 +30,8 @@ func on_tick(_tick_index: int, enemies: Array) -> void:
 	if not alive or definition == null:
 		return
 	_ticks_since_shot += 1
-	if _ticks_since_shot < definition.attack_interval_ticks:
+	var interval: int = maxi(roundi(definition.attack_interval_ticks / maxf(attack_speed_multiplier, 0.01)), 1)
+	if _ticks_since_shot < interval:
 		return
 	var target: Enemy = closest_in_range(enemies)
 	if target == null:
@@ -35,7 +39,7 @@ func on_tick(_tick_index: int, enemies: Array) -> void:
 	_ticks_since_shot = 0
 	var roll: float = _rng.randf()
 	var damage: float = DamageCalculator.calculate(
-		definition.base_damage, 1.0, definition.crit_chance, definition.crit_multiplier,
+		definition.base_damage, damage_multiplier, definition.crit_chance, definition.crit_multiplier,
 		target.definition.armour, 1.0, roll)
 	fire_requested.emit(global_position, target, damage)
 
