@@ -6,6 +6,8 @@ class_name ProductionManager
 extends Node
 
 signal rates_changed(wood: float, stone: float, iron: float)
+## Emitted when a building hands out resources, so the battle can show the gain (feedback).
+signal produced(building_id: String, resource: String, amount: int)
 
 const LEVEL_MULTIPLIER: float = 1.5
 
@@ -94,6 +96,8 @@ func on_tick(tick_index: int) -> void:
 		if _is_exposed(building_id, interval_index, data.exposure_chance_per_interval):
 			amount -= 1
 		state.add_material(data.production_resource, amount)
+		if amount > 0:
+			produced.emit(building_id, data.production_resource, amount)
 
 
 ## Deterministic roll: the same building and interval always give the same answer.

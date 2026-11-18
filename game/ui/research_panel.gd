@@ -32,10 +32,22 @@ func build() -> void:
 	var panel: PanelContainer = PanelContainer.new()
 	panel.position = PANEL_POSITION
 	panel.custom_minimum_size = Vector2(PANEL_WIDTH, 0.0)
+	# A solid panel, so the battle does not show through the research list.
+	var style: StyleBoxFlat = StyleBoxFlat.new()
+	style.bg_color = Color(0.1, 0.11, 0.15, 0.97)
+	style.border_color = Color(0.45, 0.4, 0.3)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(4)
+	style.set_content_margin_all(8)
+	panel.add_theme_stylebox_override("panel", style)
 	add_child(panel)
+	# The list scrolls inside a fixed height, so it never runs off the bottom of the screen.
+	var scroll: ScrollContainer = ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(PANEL_WIDTH - 16.0, 560.0)
+	panel.add_child(scroll)
 	_column = VBoxContainer.new()
-	_column.custom_minimum_size = Vector2(PANEL_WIDTH - 16.0, 0.0)
-	panel.add_child(_column)
+	_column.custom_minimum_size = Vector2(PANEL_WIDTH - 32.0, 0.0)
+	scroll.add_child(_column)
 	_points_label = Label.new()
 	_column.add_child(_points_label)
 

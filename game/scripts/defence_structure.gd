@@ -26,11 +26,9 @@ var _ticks_since_shot: int = 0
 
 ## Visual: a block for each structure, larger with each upgrade level (SVTLW-54 gap: no visual before).
 func _draw() -> void:
-	var side: float = 28.0 * visual_scale_for_level(level)
-	var colour: Color = Color(0.55, 0.55, 0.6) if building_id == "tower" else Color(0.5, 0.36, 0.2)
-	var rect: Rect2 = Rect2(Vector2(-side, -side) * 0.5, Vector2(side, side))
-	draw_rect(rect, colour)
-	draw_rect(rect, Color(0.1, 0.1, 0.1), false, 2.0)
+	var side: float = 32.0 * visual_scale_for_level(level)
+	var art_name: String = "tower" if building_id == "tower" else "archer_platform"
+	draw_texture_rect(SpriteArt.texture(art_name), Rect2(Vector2(-side, -side) * 0.5, Vector2(side, side)), false)
 
 
 func _process(_delta: float) -> void:

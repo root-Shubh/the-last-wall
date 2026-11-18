@@ -9,10 +9,10 @@ signal wall_attacked(damage: float)
 signal wall_attacked_unarmoured(damage: float)
 
 @export var definitions: Array[EnemyDefinition] = []
-@export var spawn_x: float = 1180.0
+@export var spawn_x: float = 960.0
 @export var wall_stop_x: float = 230.0
 ## Y coordinate of the enemy lane. Archers must be within range of this line to fire at enemies.
-@export var lane_y: float = 360.0
+@export var lane_y: float = 536.0
 
 var enemies: Array[Enemy] = []
 var _by_id: Dictionary = {}

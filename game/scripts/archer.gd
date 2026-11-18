@@ -124,3 +124,14 @@ func take_damage(amount: float) -> void:
 		health = 0.0
 		alive = false
 		died.emit(self)
+
+
+## Visual: a figure with a bow line, so recruits are visible on the wall (SVTLW-103).
+func _draw() -> void:
+	var art: Texture2D = SpriteArt.texture("archer")
+	if art != null:
+		draw_texture_rect(art, Rect2(Vector2(-16.0, -28.0), Vector2(32.0, 32.0)), false)
+
+
+func _process(_delta: float) -> void:
+	queue_redraw()

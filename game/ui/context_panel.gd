@@ -205,7 +205,7 @@ func _refresh_unit() -> void:
 
 func _refresh_recruit() -> void:
 	if state != null:
-		_recruit_gold.text = "Gold: %d" % state.gold
+		_recruit_gold.text = "Gold: %d    Population: %d/%d" % [state.gold, units.population_used(), units.population_cap] if units != null else "Gold: %d" % state.gold
 	for unit_id: String in _recruit_buttons:
 		var button: Button = _recruit_buttons[unit_id]
 		var reason: String = units.recruit_block_reason(unit_id) if units != null else "no unit manager"

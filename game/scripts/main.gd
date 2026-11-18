@@ -7,6 +7,8 @@ const BATTLEFIELD_SCENE: String = "res://scenes/battlefield.tscn"
 
 var menu: MainMenu = null
 var picker: CharacterSelect = null
+var options: OptionsScreen = null
+var credits: CreditsScreen = null
 var dialogue: DialogueManager = null
 var dialogue_box: DialogueBox = null
 var battlefield: Battlefield = null
@@ -50,6 +52,21 @@ func ensure_started() -> void:
 	menu.continue_requested.connect(_on_continue)
 	menu.exit_requested.connect(func() -> void: get_tree().quit())
 
+	options = OptionsScreen.new()
+	add_child(options)
+	options.build()
+	options.closed.connect(func() -> void: menu.visible = true)
+	menu.settings_requested.connect(func() -> void:
+		menu.visible = false
+		options.open(SettingsStore.new()))
+	credits = CreditsScreen.new()
+	add_child(credits)
+	credits.build()
+	credits.closed.connect(func() -> void: menu.visible = true)
+	menu.credits_requested.connect(func() -> void:
+		menu.visible = false
+		credits.open())
+
 	picker = CharacterSelect.new()
 	picker.game_state = state
 	add_child(picker)
@@ -65,6 +82,8 @@ func _show_picker() -> void:
 ## The intro plays first when a new game starts. The battlefield opens when the intro ends.
 func _on_new_game_started(_character_id: String, _display_name: String) -> void:
 	picker.hide()
+	# The menu stays out of sight during the intro, so its buttons do not show behind the dialogue.
+	menu.visible = false
 	if dialogue.is_playing():
 		dialogue.sequence_finished.connect(func(_id: String) -> void: _enter_battlefield(false), CONNECT_ONE_SHOT)
 	else:

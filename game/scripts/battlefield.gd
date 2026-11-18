@@ -25,7 +25,7 @@ var production: ProductionManager
 var effects: EffectPool
 var context_panel: ContextPanel
 ## Fixed build slots on the fortress, indexed by slot number (SVTLW-100).
-const SLOT_POSITIONS: Array[Vector2] = [Vector2(130.0, 170.0), Vector2(130.0, 540.0), Vector2(60.0, 360.0), Vector2(60.0, 250.0)]
+const SLOT_POSITIONS: Array[Vector2] = [Vector2(40.0, 540.0), Vector2(130.0, 592.0), Vector2(40.0, 470.0), Vector2(40.0, 400.0)]
 ## Gold per upgrade level: upgrading from level n costs UPGRADE_GOLD_PER_LEVEL * n.
 const UPGRADE_GOLD_PER_LEVEL: int = 25
 ## Radius of the explosion raised by a defence structure's shot.
@@ -87,7 +87,9 @@ func ensure_ready() -> void:
 	add_child(damage_numbers)
 	_build_systems()
 	_build_meta()
+	_build_research()
 	_connect_systems()
+	_build_view()
 	hud = TopBar.new()
 	add_child(hud)
 	hud.bind(game_state, clock, waves, wall)
@@ -120,8 +122,69 @@ func _update_shake() -> void:
 func build(building_id: String, slot: int) -> bool:
 	ensure_ready()
 	if slot < 0 or slot >= SLOT_POSITIONS.size():
+		notice.emit("No free slot on the fortress")
 		return false
-	return constructions.start_construction(building_id, slot)
+	var reason: String = constructions.start_block_reason(building_id, slot)
+	if reason != "":
+		notice.emit(reason)
+		return false
+	var cost: int = constructions.definition(building_id).build_cost
+	constructions.start_construction(building_id, slot)
+	float_text(SLOT_POSITIONS[slot], "-%d gold" % cost, Color(1.0, 0.8, 0.3))
+	return true
+
+
+## A short message for refused actions and results (SVTLW-105 feedback).
+signal notice(text: String)
+
+
+## Floating text that rises and fades, for gold gained or spent and for damage (feedback).
+func float_text(at: Vector2, text: String, colour: Color) -> void:
+	var label: Label = Label.new()
+	label.text = text
+	label.position = at + Vector2(-20.0, -40.0)
+	label.add_theme_color_override("font_color", colour)
+	label.add_theme_font_size_override("font_size", 16)
+	add_child(label)
+	var tween: Tween = label.create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(label, "position:y", label.position.y - 34.0, 1.1)
+	tween.tween_property(label, "modulate:a", 0.0, 1.1)
+	tween.chain().tween_callback(label.queue_free)
+
+
+## Builds the wall-tier system and the fortress view (SVTLW-63, floors and tiers).
+func _build_view() -> void:
+	tiers = WallTierManager.new()
+	add_child(tiers)
+	tiers.bind(game_state, wall)
+	tiers.load_default_tiers()
+	tiers.current_index = clampi(int(game_state.wall_tier) - 1, 0, WallTierManager.TIER_COUNT - 1)
+	# The scene's placeholder fortress shapes give way to the tiered wall and the recruited archers.
+	for placeholder: String in ["Fortress/Wall", "Fortress/Keep", "Fortress/ArcherA", "Fortress/ArcherB", "Fortress/ArcherC"]:
+		var shape: CanvasItem = get_node_or_null(placeholder)
+		if shape != null:
+			shape.visible = false
+	view = BattleView.new()
+	view.field = self
+	add_child(view)
+
+
+## Upgrades the wall one tier, with the tier's gold cost. Refusals say why (SVTLW-63).
+func upgrade_wall() -> bool:
+	ensure_ready()
+	if tiers.current_index >= WallTierManager.TIER_COUNT - 1:
+		notice.emit("The wall is already at its highest tier")
+		return false
+	var next: WallTier = tiers.tiers[tiers.current_index + 1]
+	if not game_state.can_afford(next.upgrade_cost):
+		notice.emit("Wall upgrade needs %d gold, you have %d" % [next.upgrade_cost, game_state.gold])
+		return false
+	if not tiers.upgrade_tier():
+		notice.emit("Wall upgrade refused")
+		return false
+	notice.emit("Wall upgraded to %s" % next.display_name)
+	return true
 
 
 ## First fixed slot with nothing built or building on it. -1 when every slot is taken.
@@ -178,8 +241,16 @@ func start_wave() -> bool:
 func recruit_archer(at: Vector2) -> Archer:
 	ensure_ready()
 	if _challenge_restriction() == "no_archers":
+		notice.emit("Challenge this week: no archers")
 		return null
-	return units.recruit("archer", at)
+	var reason: String = units.recruit_block_reason("archer")
+	if reason != "":
+		notice.emit(reason)
+		return null
+	var archer: Archer = units.recruit("archer", at)
+	if archer != null:
+		float_text(at, "Archer recruited", Color(0.7, 0.9, 1.0))
+	return archer
 
 
 ## The restriction of this week's challenge when challenge mode is on, else "" (SVTLW-77).
@@ -197,11 +268,19 @@ func set_challenge_mode(on: bool) -> void:
 	_apply_upgrade_effects()
 
 
+## Where a recruit stands on the wall top: spaced along the wall, feet on the top line.
+func recruit_position(slot: int) -> Vector2:
+	if view == null:
+		return SLOT_POSITIONS[0]
+	return Vector2(BattleView.WALL_LEFT + 22.0 + 24.0 * float(slot % 4), view.wall_top_y() + 2.0)
+
+
 ## Active abilities (SVTLW-64). Returns false when locked, on cooldown or refused.
 func use_ability(ability_id: String) -> bool:
 	ensure_ready()
 	var researched: Array = game_state.research.get("researched", [])
 	if not abilities.use(ability_id, _tick_index, researched):
+		notice.emit(abilities.refusal_reason(ability_id, _tick_index, researched))
 		return false
 	match ability_id:
 		Abilities.RAIN_OF_ARROWS:
@@ -211,7 +290,7 @@ func use_ability(ability_id: String) -> bool:
 			game_state.repair_wall(REPAIR_AMOUNT)
 		Abilities.REINFORCEMENT:
 			for i: int in range(REINFORCEMENT_COUNT):
-				recruit_archer(SLOT_POSITIONS[0] + Vector2(20.0 * i, 0.0))
+				recruit_archer(recruit_position(i))
 		Abilities.LAST_STAND:
 			_last_stand_until = _tick_index + Abilities.LAST_STAND_TICKS
 	_sound("ability")
@@ -248,6 +327,47 @@ func step_ticks(count: int) -> void:
 	ensure_ready()
 	for i: int in range(count):
 		clock.advance(1.0 / SimulationClock.TICKS_PER_SECOND + 0.0001)
+
+
+## Research (SVTLW-61): the manager, and the panel the Research button opens. Points come from waves.
+const RESEARCH_POINTS_PER_WAVE: int = 1
+var research: ResearchManager = null
+var research_panel: ResearchPanel = null
+var tiers: WallTierManager = null
+var view: BattleView = null
+
+
+func _build_research() -> void:
+	research = ResearchManager.new()
+	research.load_definitions("res://resources/research")
+	research.bind(game_state)
+	research_panel = ResearchPanel.new()
+	add_child(research_panel)
+	research_panel.bind(research)
+	research_panel.visible = false
+
+
+## Enemy types unlocked by wave number. Every wave mixes the types unlocked so far, so waves are not one type each.
+const ENEMY_UNLOCK_WAVES: Dictionary = {
+	"undead_infantry": 1,
+	"runner": 4,
+	"armoured_brute": 7,
+	"shield_bearer": 10,
+	"climber": 13,
+}
+var _spawn_counter: int = 0
+
+
+## The next enemy for a wave: cycles through the types unlocked by that wave.
+func _mixed_enemy_for_wave(wave_number: int) -> String:
+	var pool: Array[String] = []
+	for id: String in ENEMY_UNLOCK_WAVES:
+		if wave_number >= int(ENEMY_UNLOCK_WAVES[id]):
+			pool.append(id)
+	if pool.is_empty():
+		pool.append("undead_infantry")
+	_spawn_counter += 1
+	return pool[(_spawn_counter - 1) % pool.size()]
 
 
 ## Builds the meta-game connections. Overseer messages load from resources/overseer (SVTLW-67, 68).
@@ -390,7 +510,7 @@ func _apply_exploit_effects() -> void:
 
 func _connect_systems() -> void:
 	clock.tick_advanced.connect(_on_tick)
-	waves.enemy_spawn_requested.connect(func(id: String) -> void: enemies.spawn(id))
+	waves.enemy_spawn_requested.connect(func(_id: String) -> void: enemies.spawn(_mixed_enemy_for_wave(waves.current_wave)))
 	waves.wave_completed.connect(_on_wave_completed)
 	enemies.enemy_removed.connect(func(_e: Enemy) -> void: waves.report_enemy_removed())
 	enemies.wall_attacked.connect(func(damage: float) -> void:
@@ -422,6 +542,7 @@ func _connect_systems() -> void:
 	_apply_upgrade_effects()
 	# Kills (health at zero) feed the objectives and the final battle. Enemies that reach the wall do not.
 	enemies.enemy_removed.connect(_on_enemy_removed_for_objectives)
+	production.produced.connect(_on_produced)
 	waves.wave_completed.connect(_on_wave_completed_for_objectives)
 
 
@@ -434,6 +555,9 @@ func _on_tick(tick_index: int) -> void:
 	constructions.on_tick(tick_index)
 	production.on_tick(tick_index)
 	_tick_index = tick_index
+	# Autosave every 30 seconds of game time, so a crash does not lose recent builds (save gap).
+	if tick_index % 300 == 0:
+		_autosave_pending = true
 	for structure: DefenceStructure in _defences.values():
 		# A slot switched off by the Overseer stops firing until it comes back (SVTLW-83).
 		if final_battle.active and final_battle.slot_disabled(structure.slot):
@@ -454,6 +578,7 @@ func _on_wave_completed(_wave_number: int) -> void:
 
 ## A finished tower or archer platform gets a DefenceStructure on its slot. A production building is registered (SVTLW-100).
 func _on_construction_completed(building_id: String, slot: int) -> void:
+	_autosave_pending = true
 	var data: BuildingDefinition = constructions.definition(building_id)
 	if data.attack_damage > 0.0:
 		var structure: DefenceStructure = DefenceStructure.new()
@@ -486,6 +611,8 @@ func _on_enemy_removed_for_objectives(enemy: Enemy) -> void:
 	if enemy.health > 0.0:
 		return
 	var enemy_id: String = enemy.definition.enemy_id
+	if enemy.definition.gold_reward > 0:
+		float_text(enemy.global_position, "+%d gold" % enemy.definition.gold_reward, Color(1.0, 0.85, 0.3))
 	objectives.record_kill(enemy_id)
 	final_battle.record_kill(enemy_id)
 	meta.on_kill(enemy_id)
@@ -502,9 +629,18 @@ func _on_enemy_removed_for_objectives(enemy: Enemy) -> void:
 			game_state.set_flag(CampaignObjectives.FLAG_REGION_ONE, true)
 
 
+## A building gave resources: float the amount over its slot (feedback).
+func _on_produced(building_id: String, resource: String, amount: int) -> void:
+	var slot: int = constructions.slot_of(building_id)
+	if slot < 0:
+		return
+	float_text(SLOT_POSITIONS[slot], "+%d %s" % [amount, resource], Color(0.75, 0.9, 0.55))
+
+
 func _on_wave_completed_for_objectives(wave_number: int) -> void:
 	var max_health: float = maxf(float(game_state.wall_max_health), 1.0)
 	objectives.record_wave_end(float(game_state.wall_health) / max_health)
+	research.add_points(RESEARCH_POINTS_PER_WAVE)
 	var intro: String = meta.start_region_overlord(wave_number)
 	if intro != "":
 		overseer_message.emit(intro)
@@ -573,9 +709,12 @@ func restore_from_save() -> bool:
 	for key: Variant in levels:
 		upgrades.levels[str(key)] = int(levels[key])
 	upgrades.effects_changed.emit()
+	# Archers stand on the wall top now, so saved positions from older versions are not used.
+	var archer_count: int = 0
 	for entry: Variant in saved.get("archers", []):
 		if typeof(entry) == TYPE_ARRAY and entry.size() == 2:
-			units.restore_unit("archer", Vector2(float(entry[0]), float(entry[1])))
+			units.restore_unit("archer", recruit_position(archer_count))
+			archer_count += 1
 	# Finished buildings come back on their slots first, so defence structures and production exist (save restore gap).
 	for entry: Variant in saved.get("buildings", []):
 		if typeof(entry) == TYPE_DICTIONARY:

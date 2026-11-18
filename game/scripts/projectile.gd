@@ -51,3 +51,15 @@ func _finish() -> void:
 	in_flight = false
 	visible = false
 	target = null
+
+
+## Visual: a small bright shot while in flight (SVTLW-103).
+func _draw() -> void:
+	if not in_flight:
+		return
+	draw_circle(Vector2.ZERO, 3.0, Color(1.0, 0.9, 0.4))
+
+
+func _process(_delta: float) -> void:
+	if in_flight:
+		queue_redraw()

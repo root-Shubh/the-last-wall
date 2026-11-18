@@ -63,3 +63,35 @@ func take_damage(amount: float) -> void:
 		health = 0.0
 		alive = false
 		died.emit(self)
+
+
+## Visual: a block coloured by role, with a health bar above it. Redrawn every frame so damage shows (SVTLW-103).
+const ROLE_SPRITES: Dictionary = {
+	"pressure": "enemy_infantry",
+	"swarm": "enemy_runner",
+	"wall_breaker": "enemy_brute",
+	"shield_bearer": "enemy_shield_bearer",
+	"climber": "enemy_climber",
+}
+const ROLE_COLOURS: Dictionary = {
+	"pressure": Color(0.75, 0.55, 0.35),
+	"swarm": Color(0.8, 0.8, 0.4),
+	"wall_breaker": Color(0.6, 0.3, 0.3),
+	"shield_bearer": Color(0.4, 0.55, 0.85),
+	"climber": Color(0.55, 0.85, 0.55),
+}
+
+
+func _draw() -> void:
+	if definition == null or not alive:
+		return
+	var art: Texture2D = SpriteArt.texture(ROLE_SPRITES.get(definition.role, "enemy_infantry"))
+	if art != null:
+		draw_texture_rect(art, Rect2(Vector2(-16.0, -26.0), Vector2(32.0, 32.0)), false)
+	var fraction: float = clampf(health / maxf(definition.max_health, 1.0), 0.0, 1.0)
+	draw_rect(Rect2(Vector2(-16.0, -30.0), Vector2(32.0, 3.0)), Color(0.15, 0.05, 0.05))
+	draw_rect(Rect2(Vector2(-16.0, -30.0), Vector2(32.0 * fraction, 3.0)), Color(0.3, 0.9, 0.3))
+
+
+func _process(_delta: float) -> void:
+	queue_redraw()

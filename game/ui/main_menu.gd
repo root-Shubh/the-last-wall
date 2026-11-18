@@ -35,8 +35,35 @@ func build() -> void:
 	if not _buttons.is_empty():
 		return
 	layer = 20
+	# Backdrop and title, drawn first so everything else sits on top (menu looked bare before).
+	var backdrop: ColorRect = ColorRect.new()
+	backdrop.color = Color(0.08, 0.09, 0.12, 1.0)
+	backdrop.anchor_right = 1.0
+	backdrop.anchor_bottom = 1.0
+	add_child(backdrop)
+	var ground: ColorRect = ColorRect.new()
+	ground.color = Color(0.16, 0.12, 0.09, 1.0)
+	ground.anchor_top = 0.78
+	ground.anchor_right = 1.0
+	ground.anchor_bottom = 1.0
+	add_child(ground)
+	var title: Label = Label.new()
+	title.text = "THE LAST WALL"
+	title.position = Vector2(0.0, 70.0)
+	title.size = Vector2(1280.0, 90.0)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 64)
+	title.add_theme_color_override("font_color", Color(0.9, 0.85, 0.7))
+	add_child(title)
+	var subtitle: Label = Label.new()
+	subtitle.text = "Hold the line. Wave after wave."
+	subtitle.position = Vector2(0.0, 160.0)
+	subtitle.size = Vector2(1280.0, 30.0)
+	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	subtitle.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+	add_child(subtitle)
 	var column: VBoxContainer = VBoxContainer.new()
-	column.position = Vector2(540.0, 180.0)
+	column.position = Vector2(540.0, 240.0)
 	column.custom_minimum_size = Vector2(200.0, 0.0)
 	add_child(column)
 	for entry: Array in ENTRIES:
